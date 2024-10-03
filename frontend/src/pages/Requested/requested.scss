@@ -1,0 +1,28 @@
+.requestedContainer {
+    min-height: 100vh;
+    width: 100%;
+    margin-top: 80px;
+    background-color: #fff;
+}
+
+.search-bar {
+    align-items: center !important;
+}
+
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    /* Full viewport height */
+    width: 100%;
+}
+
+.loadingMessage {
+    margin-top: 20px;
+    font-size: 28px;
+    /* Font size for loading message */
+    color: #3498db;
+    /* Matching color with spinner */
+}

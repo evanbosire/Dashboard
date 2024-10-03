@@ -1,0 +1,129 @@
+/* Main */
+.main-container {
+    grid-area: main;
+    margin-top: 80px;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+    padding: 20px 20px;
+    color: rgba(255, 255, 255, 0.95);
+    min-height: 100vh;
+    width: 100%;
+    margin-left: 0;
+    
+}
+
+.main-title {
+    display: flex;
+    justify-content: space-between;
+    color: rgb(171, 25, 204);
+}
+
+.main-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 100px;
+    height: 200px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-cards {
+        grid-template-columns: 1fr;
+        /* Stack cards vertically on smaller screens */
+    }
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding: 8px 15px;
+    border-radius: 5px;
+    // height: 200px;
+    margin-top: 20px;
+    
+}
+
+.card:nth-child(1) {
+    background-color: #2962ff;
+}
+
+.card:nth-child(2) {
+    background-color: #ff6d00;
+}
+
+.card:nth-child(3) {
+    background-color: #2e7d32;
+}
+
+.card:nth-child(4) {
+    background-color: #d50000;
+}
+
+.card-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #fff;
+}
+.card_icon {
+    color: #fff;
+}
+.number {
+    color: #fff;
+}
+
+.card-inner>.card_icon {
+    font-size: 25px;
+}
+
+
+/* Add styles for chart titles */
+.chart-titles {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 20px 0;
+    text-align: center;
+    color: rgb(171, 25, 204);
+}
+
+/* Flexbox layout for charts */
+.barChart {
+    display: flex;
+    gap: 20px;
+    /* Space between charts */
+    margin-top: 20px;
+    /* Space above the charts */
+    height: 300px;
+    flex-wrap: wrap;
+    /* Allow charts to wrap on smaller screens */
+    
+}
+
+.barChart>div {
+    flex: 1;
+    /* Allow each chart to take up equal space */
+    min-width: 300px;
+    /* Minimum width for each chart */
+    height: 100%;
+    /* Ensure charts fill their container */
+}
+
+/* End Main */
+/* Add styles for the loader container */
+.loaderContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    /* Ensure it covers the full height of the viewport */
+}
+
+.loadingMessage {
+    margin-top: 30px;
+    font-size: 28px;
+    color: #3498db;
+}

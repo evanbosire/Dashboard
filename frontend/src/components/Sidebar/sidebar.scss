@@ -1,0 +1,171 @@
+// .sidebar {
+//     flex: 1.3;
+//     background-color: #000;
+//     color: white;
+//     min-height: 100vh;
+//     border-right: 1px solid lightgray;
+//     padding: 20px;
+//     position: fixed;
+//     left: -260px;
+//     /* Move sidebar off the screen initially */
+//     top: 0;
+//     bottom: 0;
+//     width: 260px;
+//     transition: left 0.3s ease;
+.sidebarContainer {
+    margin-top: 60px;
+    padding: 0;
+    transition: all 0.3s ease;
+    min-height: 100vh;
+}
+.sidebar {
+    margin-top: 0;
+    background-color: #3d367f;
+    flex: 1;
+    min-height: 100vh;
+    // width: 20%;
+    color: white;
+    border-right: 1px solid lightgray;
+    padding-left: 5px;
+
+    li {
+        display: flex;
+        align-items: center; 
+        justify-content: start;
+        gap: 8px;
+        cursor: pointer;
+        padding: 10px 0;
+        font-size: 14px;
+
+
+        &:hover {
+                background-color: #b3a4;
+            }
+    }
+   
+}
+
+.submenu {
+    padding-left: 30px;
+}
+
+//  link Reset  
+.custom-link {
+    text-decoration: none;
+    color: inherit;
+    font-weight: normal;
+}
+
+.custom-link:focus {
+    outline: none;
+}
+
+.custom-link:hover,
+.custom-link:active {
+    color: inherit;
+    text-decoration: none;
+}
+//  End link Reset  
+.sidebarContainer.closed {
+    width: 0;
+    overflow: hidden;
+}
+.sidebarContainer.open {
+    width: 250px;
+}
+
+// li {
+    
+
+//     &:hover {
+//         background-color: #b3a4;
+//     }
+//     &.open {
+//         left: 0;
+//         /* Bring sidebar onto the screen when open */
+//     }
+
+//     .top {
+//         display: flex;
+//         height: 50px;
+//         align-items: center;
+//         justify-content: center;
+
+//         .logo {
+//             font-size: 20px;
+//             font-weight: bold;
+//             color: yellow;
+//         }
+//     }
+
+//     hr {
+//         border: none;
+//         height: 1px;
+//         background-color: #333;
+//         margin: 20px 0;
+//     }
+
+//     .bottom {
+//         ul {
+//             list-style: none;
+//             padding: 0;
+//             margin: 0;
+
+//             .menu-item,
+//             li {
+//                 display: flex;
+//                 align-items: center;
+//                 justify-content: space-between;
+//                 cursor: pointer;
+//                 padding: 10px 0;
+//                 font-size: 14px;
+
+//                 &:hover {
+//                     background-color: #b3a4;
+//                 }
+
+//                 .icon {
+//                     margin-right: 10px;
+//                     font-size: 20px;
+//                     /* Adjust this value as needed */
+//                     display: flex;
+//                     align-items: center;
+//                 }
+
+//                 span {
+//                     flex: 1;
+//                     font-size: 14px;
+//                     font-weight: 700;
+//                 }
+
+//                 .chevron {
+//                     margin-left: 10px;
+//                     display: flex;
+//                     align-items: center;
+//                 }
+//             }
+
+//             .submenu {
+//                 padding-left: 30px;
+
+//                 /* Adjust this value for more or less indent */
+//                 li {
+//                     padding: 8px 0;
+//                     font-size: 14px;
+//                     color: #bbb;
+
+//                     &:hover {
+//                         color: white;
+//                     }
+//                 }
+
+//             }
+//         }
+//     }
+// }
+
+// .homeContainer.sidebar-open {
+//     margin-left: 260px;
+//     /* Push main content when sidebar is open */
+//     transition: margin-left 0.3s ease;
+// }
