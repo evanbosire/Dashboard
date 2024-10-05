@@ -124,7 +124,7 @@ function Dashboard() {
 
           <div className="chart-titles">PRODUCTION BAR & LINE CHARTS</div>
           <div className="barChart">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart
                 width={500}
                 height={300}
@@ -158,7 +158,7 @@ function Dashboard() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={300}>
               <LineChart
                 width={500}
                 height={300}
