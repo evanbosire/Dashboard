@@ -17,8 +17,9 @@ function Rejected() {
     const fetchCustomers = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/customers/rejected"
+          "https://your-backend-url.onrender.com/api/customers/rejected"
         );
+
         setCustomers(response.data);
       } catch (error) {
         console.error("Error fetching customers:", error);
