@@ -123,13 +123,13 @@ function Dashboard() {
           </div>
 
           <div className="chart-titles">PRODUCTION BAR & LINE CHARTS</div>
-          <div className="barChart">
+          <div className="barChart" style={{ marginTop: "20px" }}>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
                 width={500}
                 height={300}
                 data={chartData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 3 }}
+                margin={{ top: 20, right: 30, left: 20, bottom: 3 }} // Increased top margin
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
@@ -138,7 +138,6 @@ function Dashboard() {
                     value: "PRODUCT",
                     position: "insideBottomRight",
                     offset: 0,
-                    margin: 10,
                   }}
                 />
                 <YAxis
@@ -163,7 +162,7 @@ function Dashboard() {
                 width={500}
                 height={300}
                 data={chartData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }} // Increased top margin
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
