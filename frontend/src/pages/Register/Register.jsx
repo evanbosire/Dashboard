@@ -52,9 +52,9 @@ function Register() {
       const regobj = { id, name, email, password, phone };
 
       try {
-        // Send request to the MongoDB backend to register an admin
+        // Update the URL to include "/api/admin"
         const response = await fetch(
-          "https://dashboard-76od.onrender.com/register",
+          "https://dashboard-76od.onrender.com/api/admin/register",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

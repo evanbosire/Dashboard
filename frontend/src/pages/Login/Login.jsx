@@ -20,7 +20,7 @@ function Login() {
       try {
         // Send login request to MongoDB backend
         const response = await fetch(
-          "https://dashboard-76od.onrender.com/login",
+          "https://dashboard-76od.onrender.com/api/admin/login",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
