@@ -8,7 +8,9 @@ export const fetchRequestedMaterials = () => async (dispatch) => {
   dispatch({ type: SET_LOADING, payload: true });
 
   try {
-    const response = await axios.get("http://localhost:5000/api/requested");
+    const response = await axios.get(
+      "https://dashboard-76od.onrender.com/api/requested"
+    );
     dispatch({
       type: FETCH_REQUESTED_MATERIALS,
       payload: response.data,

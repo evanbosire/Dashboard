@@ -37,7 +37,9 @@ function Rejected() {
 
   const handlePending = async (id) => {
     try {
-      await axios.patch(`http://localhost:5000/api/customers/revert/${id}`);
+      await axios.patch(
+        `https://dashboard-76od.onrender.com/api/customers/revert/${id}`
+      );
       setCustomers(customers.filter((customer) => customer._id !== id));
     } catch (error) {
       console.error("Error reverting customer:", error);

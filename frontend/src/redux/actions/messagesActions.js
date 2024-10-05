@@ -8,7 +8,9 @@ export const fetchMessagesData = () => async (dispatch) => {
   dispatch({ type: SET_LOADING, payload: true });
 
   try {
-    const response = await axios.get("http://localhost:5000/api/messages");
+    const response = await axios.get(
+      "https://dashboard-76od.onrender.com/api/messages"
+    );
     dispatch({
       type: FETCH_MESSAGES_DATA,
       payload: response.data,

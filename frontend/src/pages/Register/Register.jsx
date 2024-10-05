@@ -47,38 +47,28 @@ function Register() {
   };
 
   const handlesubmit = async (e) => {
-    e.preventDefault(); // Prevent default form submission behavior
+    e.preventDefault();
     if (IsValidate()) {
       const regobj = { id, name, email, password, phone };
 
-      // Check for existing users with the same email
       try {
-        const response = await fetch("http://localhost:3000/user");
-        const existingUsers = await response.json();
+        // Send request to the MongoDB backend to register an admin
+        const response = await fetch(
+          "https://dashboard-76od.onrender.com/register",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(regobj),
+          }
+        );
 
-        // Check if the email is already taken
-        const emailExists = existingUsers.some((user) => user.email === email);
-        if (emailExists) {
-          toast.warning(
-            "Email is already taken. Please use a different email."
-          );
-          return;
-        }
+        const data = await response.json();
 
-        // Proceed with registration if email is unique
-        const regResponse = await fetch("http://localhost:3000/user", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(regobj),
-        });
-
-        if (regResponse.ok) {
+        if (response.ok) {
           toast.success("Registered Successfully");
           navigate("/login");
         } else {
-          return regResponse.json().then((data) => {
-            throw new Error(data.message || "Failed to register");
-          });
+          throw new Error(data.message || "Registration failed");
         }
       } catch (err) {
         toast.error("Failed: " + err.message);

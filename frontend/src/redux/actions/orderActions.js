@@ -9,7 +9,9 @@ export const fetchOrders = () => async (dispatch) => {
   dispatch({ type: SET_LOADING, payload: true });
 
   try {
-    const response = await axios.get("http://localhost:5000/api/orders");
+    const response = await axios.get(
+      "https://dashboard-76od.onrender.com/api/orders"
+    );
     dispatch({
       type: FETCH_ORDERS,
       payload: response.data,

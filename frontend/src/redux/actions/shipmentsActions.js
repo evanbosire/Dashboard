@@ -20,7 +20,9 @@ export const fetchShipments = () => async (dispatch) => {
   dispatch(setLoading(true)); // Set loading state to true
 
   try {
-    const response = await axios.get("http://localhost:5000/api/shipments"); // Adjust endpoint as necessary
+    const response = await axios.get(
+      "https://dashboard-76od.onrender.com/api/shipments"
+    ); // Adjust endpoint as necessary
     dispatch({
       type: FETCH_SHIPMENTS,
       payload: response.data, // Dispatch fetched data

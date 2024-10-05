@@ -9,7 +9,7 @@ export const fetchServicesOffered = () => async (dispatch) => {
 
   try {
     const response = await axios.get(
-      "http://localhost:5000/api/servicesoffered"
+      "https://dashboard-76od.onrender.com/api/servicesoffered"
     );
     dispatch({
       type: FETCH_SERVICES_OFFERED,

@@ -8,7 +8,9 @@ export const fetchProductionData = () => async (dispatch) => {
   dispatch({ type: SET_LOADING, payload: true });
 
   try {
-    const response = await axios.get("http://localhost:5000/api/productions");
+    const response = await axios.get(
+      "https://dashboard-76od.onrender.com/api/productions"
+    );
     dispatch({
       type: FETCH_PRODUCTION_DATA,
       payload: response.data,

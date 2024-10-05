@@ -14,29 +14,32 @@ function Login() {
     sessionStorage.clear();
   }, []);
 
-  const ProceedLogin = (e) => {
+  const ProceedLogin = async (e) => {
     e.preventDefault();
     if (validate()) {
-      fetch("http://localhost:3000/user")
-        .then((res) => res.json())
-        .then((users) => {
-          // Find user with matching email and password
-          const user = users.find(
-            (u) => u.email === email && u.password === password
-          );
-
-          if (user) {
-            toast.success("Login successful!");
-            // Redirect to another page after successful login
-            sessionStorage.setItem("email", email);
-            navigate("/dashboard");
-          } else {
-            toast.error("Invalid email or password.");
+      try {
+        // Send login request to MongoDB backend
+        const response = await fetch(
+          "https://dashboard-76od.onrender.com/login",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
           }
-        })
-        .catch((err) => {
-          toast.error("Login Failed due to :" + err.message);
-        });
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+          toast.success("Login successful!");
+          sessionStorage.setItem("email", email); // Store the email in session
+          navigate("/dashboard"); // Redirect to the dashboard
+        } else {
+          toast.error(data.message || "Invalid email or password.");
+        }
+      } catch (err) {
+        toast.error("Login Failed: " + err.message);
+      }
     }
   };
 

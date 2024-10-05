@@ -25,7 +25,9 @@ export const fetchSupplies = () => async (dispatch) => {
   dispatch(fetchSuppliesRequest()); // Notify that fetching is starting
 
   try {
-    const response = await axios.get("http://localhost:5000/api/supplies");
+    const response = await axios.get(
+      "https://dashboard-76od.onrender.com/api/supplies"
+    );
     dispatch(fetchSuppliesSuccess(response.data)); // Dispatch success action with data
   } catch (error) {
     dispatch(fetchSuppliesFailure(error.message)); // Dispatch failure action with error message
