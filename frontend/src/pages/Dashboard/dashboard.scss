@@ -5,33 +5,93 @@
     justify-content: center;
     align-items: center;
     overflow-y: auto;
-    padding: 20px 20px;
+    padding: 20px;
     color: rgba(255, 255, 255, 0.95);
     min-height: 100vh;
     width: 100%;
     margin-left: 0;
-    
+    padding-bottom: 40px;
+    /* Added padding to the bottom */
 }
 
 .main-title {
     display: flex;
     justify-content: space-between;
     color: rgb(171, 25, 204);
+    font-size: 1.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .main-cards {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(4, 1fr);
     gap: 15px;
-    margin-bottom: 100px;
+    margin-bottom: 20px;
+    /* Space below the cards */
     height: 200px;
+    /* Keep a fixed height for cards */
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .recharts-responsive-container {
+            margin-top: 360px;
+        }
     .main-cards {
         grid-template-columns: 1fr;
-        /* Stack cards vertically on smaller screens */
+        /* Stack cards vertically */
+        margin-bottom: 30px;
+        /* Add margin below the cards */
+    }
+
+    .main-title {
+        font-size: 1rem;
+        /* Adjust title font size for smaller screens */
+        justify-content: center;
+        /* Center title */
+        margin-right: 0;
+        /* Remove margin to the right */
+    }
+
+    .barChart {
+        flex-direction: column;
+        /* Stack graphs below each other */
+        gap: 20px;
+        /* Add gap between bar charts */
+        margin-top: 40px;
+        /* Increased top margin for more spacing */
+        margin-bottom: 40px;
+        /* Added bottom margin to separate from cards */
+    }
+
+    .barChart>div {
+        min-width: 100%;
+        /* Allow each chart to take up full width on small screens */
+        margin-bottom: 20px;
+        /* Add bottom margin to each chart */
+        height: 300px;
+        /* Set a fixed height for the charts */
+    }
+}
+
+/* Chart styles */
+.barChart {
+    display: flex;
+    gap: 20px;
+    /* Space between charts */
+    margin-top: 40px;
+    /* Space above the charts */
+    flex-wrap: wrap;
+    /* Allow charts to wrap on smaller screens */
+
+
+    .barChart>div {
+        min-width: 100%;
+        /* Allow each chart to take up full width on small screens */
+        margin-bottom: 20px;
+        /* Add bottom margin to each chart */
     }
 }
 
@@ -41,9 +101,7 @@
     justify-content: space-around;
     padding: 8px 15px;
     border-radius: 5px;
-    // height: 200px;
     margin-top: 20px;
-    
 }
 
 .card:nth-child(1) {
@@ -67,10 +125,15 @@
     align-items: center;
     justify-content: space-between;
     color: #fff;
+    font-size: 16px;
+    /* Set font size for card text */
 }
+
 .card_icon {
     color: #fff;
+    font-size: 25px;
 }
+
 .number {
     color: #fff;
 }
@@ -79,10 +142,9 @@
     font-size: 25px;
 }
 
-
-/* Add styles for chart titles */
+/* Adjust chart title font size */
 .chart-titles {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: bold;
     margin: 20px 0;
     text-align: center;
@@ -96,10 +158,8 @@
     /* Space between charts */
     margin-top: 20px;
     /* Space above the charts */
-    height: 300px;
     flex-wrap: wrap;
     /* Allow charts to wrap on smaller screens */
-    
 }
 
 .barChart>div {
@@ -112,6 +172,7 @@
 }
 
 /* End Main */
+
 /* Add styles for the loader container */
 .loaderContainer {
     display: flex;
@@ -124,6 +185,34 @@
 
 .loadingMessage {
     margin-top: 30px;
-    font-size: 28px;
+    font-size: 1rem;
+    /* Reduce font size for loading message */
     color: #3498db;
+}
+
+/* Additional styling to improve navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    font-size: 12px;
+    /* Set navbar font size */
+}
+
+.menu-icon {
+    margin-right: 15px;
+    /* Add gap between menu icon and content */
+}
+
+.chart-titles {
+    margin-top: 20px;
+    /* Adjust the value as needed */
+    margin-bottom: 20px;
+    /* Adjust the value as needed */
+    font-weight: bold;
+    /* Optional: make the title bold */
+    font-size: 18px;
+    /* Optional: adjust the font size */
+    text-align: center;
+    /* Optional: center align the text */
 }
