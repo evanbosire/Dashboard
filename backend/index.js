@@ -2,6 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+require("dotenv").config(); // Load environment variables from .env file
+
 const customerRoutes = require("./routes/customerRoutes");
 const employeeRouters = require("./routes/employeeRoutes");
 const orderRoutes = require("./routes/orderRoutes");
@@ -17,9 +19,8 @@ const messagesRoutes = require("./routes/messagesRoutes");
 const app = express();
 const port = process.env.PORT || 5000; // Use the environment PORT variable
 
-// MongoDB connection
-const uri =
-  "mongodb+srv://Database_1:Database_1@cluster0.lybf6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+// MongoDB connection using environment variable
+const uri = process.env.MONGO_URL;
 mongoose
   .connect(uri, { useNewUrlParser: true, useUnifiedTopology: true }) // Consider updating options for Mongoose
   .then(() => console.log("MongoDB connected successfully"))
