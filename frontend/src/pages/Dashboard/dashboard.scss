@@ -32,17 +32,17 @@
     /* Space below the cards */
     height: 200px;
     /* Keep a fixed height for cards */
-}
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .main-cards {
+    @media (max-width: 768px) {
         grid-template-columns: 1fr;
         /* Stack cards vertically */
         margin-bottom: 30px;
         /* Add margin below the cards */
     }
+}
 
+/* Responsive Design */
+@media (max-width: 768px) {
     .main-title {
         font-size: 1rem;
         /* Adjust title font size for smaller screens */
@@ -83,12 +83,13 @@
     flex-wrap: wrap;
     /* Allow charts to wrap on smaller screens */
 
-
-    .barChart>div {
-        min-width: 100%;
-        /* Allow each chart to take up full width on small screens */
-        margin-bottom: 20px;
-        /* Add bottom margin to each chart */
+    >div {
+        flex: 1;
+        /* Allow each chart to take up equal space */
+        min-width: 300px;
+        /* Minimum width for each chart */
+        height: 100%;
+        /* Ensure charts fill their container */
     }
 }
 
@@ -157,15 +158,6 @@
     /* Space above the charts */
     flex-wrap: wrap;
     /* Allow charts to wrap on smaller screens */
-}
-
-.barChart>div {
-    flex: 1;
-    /* Allow each chart to take up equal space */
-    min-width: 300px;
-    /* Minimum width for each chart */
-    height: 100%;
-    /* Ensure charts fill their container */
 }
 
 /* End Main */
