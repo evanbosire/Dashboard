@@ -16,6 +16,7 @@ function Rejected() {
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
+        // Ensure the API URL is correct for production
         const response = await axios.get(
           "https://dashboard-76od.onrender.com/api/customers/rejected"
         );
@@ -29,23 +30,27 @@ function Rejected() {
 
     fetchCustomers();
 
+    // Check session storage for email and redirect to login if not found
     const email = sessionStorage.getItem("email");
     if (!email) {
       navigate("/login");
     }
   }, [navigate]);
 
+  // Function to handle reverting customers to pending
   const handlePending = async (id) => {
     try {
       await axios.patch(
         `https://dashboard-76od.onrender.com/api/customers/revert/${id}`
       );
+      // Filter out the reverted customer from the list
       setCustomers(customers.filter((customer) => customer._id !== id));
     } catch (error) {
       console.error("Error reverting customer:", error);
     }
   };
 
+  // Define actions that can be performed on each customer
   const actions = [
     {
       label: "Pending",
@@ -53,10 +58,12 @@ function Rejected() {
     },
   ];
 
+  // Handle search input change
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
   };
 
+  // Filter customers based on the search query
   const filteredData = customers.filter((item) =>
     Object.values(item).some((value) =>
       value.toString().toLowerCase().includes(searchQuery.toLowerCase())
