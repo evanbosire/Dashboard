@@ -47,7 +47,7 @@ app.use("/api", servicesOfferedRoutes);
 app.use("/api", servicesPaymentRoutes);
 app.use("/api", productionRoutes);
 app.use("/api", messagesRoutes);
-app.use("/api/admin", AdminRoutes); // Admin routes for login and registration
+app.use("/api/admin", adminRoutes); // Admin routes for login and registration
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
