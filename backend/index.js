@@ -15,7 +15,7 @@ const servicesOfferedRoutes = require("./routes/servicesofferedRoutes");
 const servicesPaymentRoutes = require("./routes/servicespaymentRoutes");
 const productionRoutes = require("./routes/productionRoutes");
 const messagesRoutes = require("./routes/messagesRoutes");
-const adminRoutes = require("./routes/adminRoutes"); // Admin routes for login and registration
+const adminRoutes = require("./routes/AdminRoutes"); // Admin routes for login and registration
 
 const app = express();
 const port = process.env.PORT || 5000; // Use the environment PORT variable

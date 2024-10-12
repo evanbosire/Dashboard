@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Customer = require("../models/Customer");
+const bcrypt = require("bcrypt");
 
 // Fetch customers by status
 router.get("/:status", async (req, res) => {
@@ -211,6 +212,45 @@ router.post("/login", async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// sign up into the db
+router.post("/signup", async (req, res) => {
+  const { customerName, gender, phone, email, password, location } = req.body; // Use customerName
+
+  try {
+    // Check if the email already exists
+    const existingCustomer = await Customer.findOne({ email });
+    if (existingCustomer) {
+      return res.status(400).json({ message: "Email already in use" });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new customer
+    const newCustomer = new Customer({
+      customerName, // Include customerName here
+      gender,
+      phone,
+      email,
+      password: hashedPassword,
+      location,
+      status: "pending",
+    });
+
+    // Save to database
+    await newCustomer.save();
+
+    res.status(201).json({
+      message: "Customer created successfully!",
+      customer: newCustomer,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Failed to create customer", error: error.message });
   }
 });
 

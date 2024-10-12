@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const CustomerSchema = new mongoose.Schema({
   customerName: {
     type: String,
-    required: true, // Ensure customerName is required
+    required: true, // Ensure this is set to true
   },
   gender: {
     type: String,
