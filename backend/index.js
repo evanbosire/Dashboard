@@ -5,7 +5,7 @@ const cors = require("cors");
 require("dotenv").config(); // Load environment variables from .env file
 
 const customerRoutes = require("./routes/customerRoutes");
-const employeeRouters = require("./routes/employeeRoutes");
+const employeeRoutes = require("./routes/employeeRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const paymentsRoutes = require("./routes/paymentRoutes");
 const shipmentsRoutes = require("./routes/shipmentsRoutes");
@@ -37,7 +37,8 @@ app.get("/", (req, res) => {
 
 // Use routes
 app.use("/api/customers", customerRoutes);
-app.use("/api", employeeRouters);
+app.use("/api", employeeRoutes);
+
 app.use("/api", orderRoutes);
 app.use("/api", paymentsRoutes);
 app.use("/api", shipmentsRoutes);

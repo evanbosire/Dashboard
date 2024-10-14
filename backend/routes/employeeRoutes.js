@@ -3,7 +3,7 @@ const router = express.Router();
 const Employee = require("../models/Employee");
 
 // Route to add a new employee
-router.post("/employee", async (req, res) => {
+router.post("/employees", async (req, res) => {
   const { password } = req.body;
 
   if (password.length !== 4) {
