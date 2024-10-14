@@ -86,7 +86,7 @@ const EmployeeForm = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        "https://dashboard-76od.onrender.com/api/employee",
+        "https://dashboard-76od.onrender.com/api/employees",
         {
           method: "POST",
           headers: {
