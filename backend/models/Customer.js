@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
 
 const CustomerSchema = new mongoose.Schema({
   customerName: {
@@ -32,14 +31,6 @@ const CustomerSchema = new mongoose.Schema({
     type: String,
     required: true, // Ensure password is required
   },
-});
-
-// Hash password before saving
-CustomerSchema.pre("save", async function (next) {
-  if (this.isModified("password")) {
-    this.password = await bcrypt.hash(this.password, 10);
-  }
-  next();
 });
 
 const Customer = mongoose.model("Customer", CustomerSchema);

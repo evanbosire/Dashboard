@@ -172,52 +172,9 @@ router.get("/events", (req, res) => {
   });
 });
 
-// Login endpoint with status check
-router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    // Find customer by email
-    const customer = await Customer.findOne({ email });
-
-    // Check if customer exists
-    if (!customer) {
-      return res.status(404).json({ message: "Customer not found" });
-    }
-
-    // Check if customer status is 'active'
-    if (customer.status !== "active") {
-      return res
-        .status(403)
-        .json({ message: "Account not approved or inactive" });
-    }
-
-    // Compare the password
-    const isMatch = await bcrypt.compare(password, customer.password);
-
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    // Create JWT token
-    const token = jwt.sign(
-      { id: customer._id, email: customer.email },
-      "your_jwt_secret_key", // Use your secret key
-      { expiresIn: "1h" } // Set token expiration
-    );
-
-    res.status(200).json({
-      message: "Login successful",
-      token,
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
 // sign up into the db
 router.post("/signup", async (req, res) => {
-  const { customerName, gender, phone, email, password, location } = req.body; // Use customerName
+  const { customerName, gender, phone, email, password, location } = req.body;
 
   try {
     // Check if the email already exists
@@ -226,16 +183,13 @@ router.post("/signup", async (req, res) => {
       return res.status(400).json({ message: "Email already in use" });
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create a new customer
+    // Create a new customer without hashing the password
     const newCustomer = new Customer({
-      customerName, // Include customerName here
+      customerName,
       gender,
       phone,
       email,
-      password: hashedPassword,
+      password, // Store the plain text password
       location,
       status: "pending",
     });
@@ -251,6 +205,44 @@ router.post("/signup", async (req, res) => {
     res
       .status(500)
       .json({ message: "Failed to create customer", error: error.message });
+  }
+});
+
+// POST /api/customer/login
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const customer = await Customer.findOne({ email });
+
+    // Check if the customer exists
+    if (!customer) {
+      return res.status(400).json({ message: "Invalid credentials." });
+    }
+
+    // Check if the password matches (without bcrypt, just plain text comparison)
+    if (customer.password !== password) {
+      return res.status(400).json({ message: "Invalid credentials." });
+    }
+
+    // Check if the customer's status is active
+    if (customer.status !== "active") {
+      return res
+        .status(403)
+        .json({ message: "Account not approved. Please contact support." });
+    }
+
+    // If everything is okay, return success
+    return res.status(200).json({
+      message: "Login successful",
+      email: customer.email,
+      status: customer.status,
+    });
+  } catch (error) {
+    console.error("Error during login:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error, please try again later." });
   }
 });
 

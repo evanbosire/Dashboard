@@ -66,4 +66,31 @@ router.patch("/employees/activate/:id", async (req, res) => {
   }
 });
 
+// route to log in an employee
+
+// POST /api/employee/login
+router.post("/employees/login", async (req, res) => {
+  const { email, password, role } = req.body;
+
+  try {
+    const employee = await Employee.findOne({ email, role });
+    if (!employee || employee.password !== password) {
+      return res.status(400).json({ message: "Invalid credentials or role." });
+    }
+
+    // Check if employee is active (you could add more checks if needed)
+    if (employee.status !== "active") {
+      return res.status(403).json({ message: "Account not active." });
+    }
+
+    // Return employee details for successful login
+    res.status(200).json({
+      email: employee.email,
+      role: employee.role,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error, please try again later." });
+  }
+});
+
 module.exports = router;

@@ -1,56 +1,48 @@
 // models/Employee.js
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
 
 const EmployeeSchema = new mongoose.Schema({
   firstName: {
     type: String,
-    required: true, // Ensure firstName is required
+    required: true,
   },
   lastName: {
     type: String,
-    required: true, // Ensure lastName is required
+    required: true,
   },
   gender: {
     type: String,
-    required: true, // Ensure gender is required
+    required: true,
   },
   phoneNumber: {
     type: String,
-    required: true, // Ensure phoneNumber is required
+    required: true,
   },
   email: {
     type: String,
-    required: true, // Ensure email is required
-    unique: true, // Ensure email is unique
+    required: true,
+    unique: true,
   },
   role: {
     type: String,
-    required: true, // Ensure role is required
+    required: true,
   },
   county: {
     type: String,
-    required: true, // Ensure county is required
+    required: true,
   },
-
   status: {
     type: String,
-    enum: ["active", "inactive"], // Define possible states
-    default: "active", // Default status is active
+    enum: ["active", "inactive"],
+    default: "active",
   },
   password: {
     type: String,
-    required: true, // Ensure password is required
+    required: true,
   },
 });
 
-// Hash password before saving
-EmployeeSchema.pre("save", async function (next) {
-  if (this.isModified("password")) {
-    this.password = await bcrypt.hash(this.password, 10);
-  }
-  next();
-});
+// No password hashing logic should be here
 
 const Employee = mongoose.model("Employee", EmployeeSchema);
 
