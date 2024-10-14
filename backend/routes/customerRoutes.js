@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const Customer = require("../models/Customer");
-const bcrypt = require("bcrypt");
 
 // Fetch customers by status
 router.get("/:status", async (req, res) => {
