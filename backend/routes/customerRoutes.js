@@ -3,6 +3,7 @@ const router = express.Router();
 const Customer = require("../models/Customer");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const jwt = require("jsonwebtoken");
 
 // Fetch customers by status
 router.get("/:status", async (req, res) => {
@@ -268,6 +269,12 @@ router.get("/verify/:token", async (req, res) => {
   }
 });
 
+const generateSecretKey = () => {
+  const secretKey = crypto.randomBytes(32).toString("hex");
+  return secretKey;
+};
+const secretKey = generateSecretKey();
+
 // POST /api/customer/login
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
@@ -292,12 +299,11 @@ router.post("/login", async (req, res) => {
         .json({ message: "Account not approved. Please contact support." });
     }
 
-    // If everything is okay, return success
-    return res.status(200).json({
-      message: "Login successful",
-      email: customer.email,
-      status: customer.status,
-    });
+    // Generate a token
+    const token = jwt.sign({ customerId: customer._id }, secretKey);
+
+    // Return success with token
+    res.status(200).json({ token, message: "Login successful" });
   } catch (error) {
     console.error("Error during login:", error);
     return res
