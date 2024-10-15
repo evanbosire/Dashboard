@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const Customer = require("../models/Customer");
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 
 // Fetch customers by status
 router.get("/:status", async (req, res) => {
@@ -171,6 +173,37 @@ router.get("/events", (req, res) => {
   });
 });
 
+// function to send verification email the user
+
+const sendVerificationEmail = async (email, verificationToken) => {
+  // create a nodemailer transport
+
+  const transporter = nodemailer.createTransport({
+    // config the email service
+    service: "gmail",
+    auth: {
+      user: "evanbosire422@gmail.com",
+      pass: "Brianbosireevans",
+    },
+  });
+
+  // compose the email message
+  const mailOptions = {
+    from: "corrugatedsheetsltd.com",
+    to: email,
+    subject: "Email Verification",
+    text: `Please click the following link to verify your email : http://localhost:5000/verify/${verificationToken}`,
+  };
+
+  // send the email
+
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.log("Error sending verification email", error);
+  }
+};
+
 // sign up into the db
 router.post("/signup", async (req, res) => {
   const { customerName, gender, phone, email, password, location } = req.body;
@@ -193,9 +226,13 @@ router.post("/signup", async (req, res) => {
       status: "pending",
     });
 
+    // generate and store a verification token.
+    newCustomer.verificationToken = crypto.randomBytes(20).toString("hex");
     // Save to database
     await newCustomer.save();
 
+    // send a verification email to the user
+    sendVerificationEmail(newCustomer.email, newCustomer.verificationToken);
     res.status(201).json({
       message: "Customer created successfully!",
       customer: newCustomer,
@@ -204,6 +241,31 @@ router.post("/signup", async (req, res) => {
     res
       .status(500)
       .json({ message: "Failed to create customer", error: error.message });
+  }
+});
+
+// Endpoint to verify the email
+
+router.get("/verify/:token", async (req, res) => {
+  try {
+    const token = req.params.token;
+
+    // Find the user with the given verification token
+    const customer = await Customer.findOne({ verificationToken: token });
+
+    if (!customer) {
+      return res.status(404).json({ message: "Invalid verification token" });
+    }
+
+    // Mark the user verified
+    customer.verified = true;
+    customer.verificationToken = undefined;
+
+    await customer.save();
+
+    res.status(200).json({ message: "Email Verified Successfully!" });
+  } catch (error) {
+    res.status(500).json({ message: "Email Verification Failed" });
   }
 });
 

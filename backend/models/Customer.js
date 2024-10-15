@@ -31,6 +31,33 @@ const CustomerSchema = new mongoose.Schema({
     type: String,
     required: true, // Ensure password is required
   },
+  verified: {
+    type: Boolean,
+    default: false,
+  },
+  verificationToken: String,
+  addresses: [
+    {
+      name: String,
+      mobileNo: String,
+      houseNo: String,
+      street: String,
+      landmark: String,
+      city: String,
+      county: String,
+      postalCode: String,
+    },
+  ],
+  orders: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: "Order",
+    },
+  ],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const Customer = mongoose.model("Customer", CustomerSchema);
