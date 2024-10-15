@@ -23,7 +23,7 @@ const port = process.env.PORT || 5000; // Use the environment PORT variable
 // MongoDB connection using environment variable
 const uri = process.env.MONGO_URL;
 mongoose
-  .connect(uri, { useNewUrlParser: true, useUnifiedTopology: true }) // Consider updating options for Mongoose
+  .connect(uri) // Consider updating options for Mongoose
   .then(() => console.log("MongoDB connected successfully"))
   .catch((err) => console.error("MongoDB connection error:", err));
 

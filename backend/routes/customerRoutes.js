@@ -192,7 +192,8 @@ const sendVerificationEmail = async (email, verificationToken) => {
     from: "corrugatedsheetsltd.com",
     to: email,
     subject: "Email Verification",
-    text: `Please click the following link to verify your email : https://backend-n0lb.onrender.com/verify/${verificationToken}`,
+    text: `Please click the following link to verify your email: https://backend-n0lb.onrender.com/api/customers/verify/${verificationToken}
+`,
   };
 
   // send the email
@@ -249,21 +250,19 @@ router.post("/signup", async (req, res) => {
 router.get("/verify/:token", async (req, res) => {
   try {
     const token = req.params.token;
-
-    // Find the user with the given verification token
     const customer = await Customer.findOne({ verificationToken: token });
 
     if (!customer) {
       return res.status(404).json({ message: "Invalid verification token" });
     }
 
-    // Mark the user verified
     customer.verified = true;
-    customer.verificationToken = undefined;
-
+    customer.verificationToken = undefined; // Clear token after verification
     await customer.save();
 
-    res.status(200).json({ message: "Email Verified Successfully!" });
+    res.status(200).json({
+      message: "Email Verified Successfully!",
+    });
   } catch (error) {
     res.status(500).json({ message: "Email Verification Failed" });
   }
