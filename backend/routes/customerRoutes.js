@@ -312,4 +312,47 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// Endpoint to store a new address to the backend
+
+router.post("/addresses", async (req, res) => {
+  try {
+    const { userId, address } = req.body;
+
+    // find the user by user Id
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found!" });
+    }
+
+    // add the new address to the adress
+    user.addresses.push(address);
+
+    // save the updated user in the backend
+    await user.save();
+
+    // Respond with a success message or the updated user data
+    res.status(200).json({ message: "Address created successfully", user });
+  } catch (error) {
+    res.status(500).json({ message: "Error adding address" });
+  }
+});
+
+// Endpoint to get all the addresses of the user
+
+router.get("/addresses/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not Found!" });
+    }
+
+    const addresses = user.addresses;
+    res.status(200).json(addresses);
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving the addresses" });
+  }
+});
+
 module.exports = router;
