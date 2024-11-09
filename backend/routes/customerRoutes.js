@@ -312,40 +312,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// // Endpoint to store a new address to the backend
-// router.post("/addresses", async (req, res) => {
-//   try {
-//     const { userId, address } = req.body;
-
-//     // Check if both userId and address are provided
-//     if (!userId || !address) {
-//       return res
-//         .status(400)
-//         .json({ message: "User ID and address are required" });
-//     }
-
-//     // Find the user by userId
-//     const user = await user.findById(userId);
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found!" });
-//     }
-
-//     // Add the new address to the user's addresses array
-//     user.addresses.push(address);
-
-//     // Save the updated user in the database
-//     await user.save();
-
-//     // Respond with a success message or the updated user data
-//     res.status(200).json({ message: "Address created successfully", user });
-//   } catch (error) {
-//     console.error("Error adding address:", error);
-//     res
-//       .status(500)
-//       .json({ message: "Error adding address", error: error.message });
-//   }
-// });
-
 // Endpoint to store a new address to the backend
 router.post("/addresses", async (req, res) => {
   try {
@@ -380,20 +346,39 @@ router.post("/addresses", async (req, res) => {
   }
 });
 
-// Endpoint to get all the addresses of the user
+// // Endpoint to get all the addresses of the user
 
-router.get("/addresses/:userId", async (req, res) => {
+// router.get("/addresses/:userId", async (req, res) => {
+//   try {
+//     const userId = req.params.userId;
+
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(404).json({ message: "User not Found!" });
+//     }
+
+//     const addresses = user.addresses;
+//     res.status(200).json(addresses);
+//   } catch (error) {
+//     res.status(500).json({ message: "Error retrieving the addresses" });
+//   }
+// });
+
+// Endpoint to get all the addresses of the customer
+router.get("/addresses/:customerId", async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const customerId = req.params.customerId;
 
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not Found!" });
+    // Assuming Customer is the model for customers
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found!" });
     }
 
-    const addresses = user.addresses;
+    const addresses = customer.addresses;
     res.status(200).json(addresses);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Error retrieving the addresses" });
   }
 });
