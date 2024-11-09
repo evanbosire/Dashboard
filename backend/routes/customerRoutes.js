@@ -313,27 +313,36 @@ router.post("/login", async (req, res) => {
 });
 
 // Endpoint to store a new address to the backend
-
 router.post("/addresses", async (req, res) => {
   try {
     const { userId, address } = req.body;
 
-    // find the user by user Id
+    // Check if both userId and address are provided
+    if (!userId || !address) {
+      return res
+        .status(400)
+        .json({ message: "User ID and address are required" });
+    }
+
+    // Find the user by userId
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found!" });
     }
 
-    // add the new address to the adress
+    // Add the new address to the user's addresses array
     user.addresses.push(address);
 
-    // save the updated user in the backend
+    // Save the updated user in the database
     await user.save();
 
     // Respond with a success message or the updated user data
     res.status(200).json({ message: "Address created successfully", user });
   } catch (error) {
-    res.status(500).json({ message: "Error adding address" });
+    console.error("Error adding address:", error);
+    res
+      .status(500)
+      .json({ message: "Error adding address", error: error.message });
   }
 });
 
