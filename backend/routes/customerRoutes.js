@@ -325,7 +325,7 @@ router.post("/addresses", async (req, res) => {
     }
 
     // Find the user by userId
-    const user = await User.findById(userId);
+    const user = await user.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found!" });
     }
