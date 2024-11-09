@@ -312,6 +312,40 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// // Endpoint to store a new address to the backend
+// router.post("/addresses", async (req, res) => {
+//   try {
+//     const { userId, address } = req.body;
+
+//     // Check if both userId and address are provided
+//     if (!userId || !address) {
+//       return res
+//         .status(400)
+//         .json({ message: "User ID and address are required" });
+//     }
+
+//     // Find the user by userId
+//     const user = await user.findById(userId);
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found!" });
+//     }
+
+//     // Add the new address to the user's addresses array
+//     user.addresses.push(address);
+
+//     // Save the updated user in the database
+//     await user.save();
+
+//     // Respond with a success message or the updated user data
+//     res.status(200).json({ message: "Address created successfully", user });
+//   } catch (error) {
+//     console.error("Error adding address:", error);
+//     res
+//       .status(500)
+//       .json({ message: "Error adding address", error: error.message });
+//   }
+// });
+
 // Endpoint to store a new address to the backend
 router.post("/addresses", async (req, res) => {
   try {
@@ -324,20 +358,20 @@ router.post("/addresses", async (req, res) => {
         .json({ message: "User ID and address are required" });
     }
 
-    // Find the user by userId
-    const user = await user.findById(userId);
-    if (!user) {
+    // Find the customer by userId
+    const customer = await Customer.findById(userId);
+    if (!customer) {
       return res.status(404).json({ message: "User not found!" });
     }
 
-    // Add the new address to the user's addresses array
-    user.addresses.push(address);
+    // Add the new address to the customer's addresses array
+    customer.addresses.push(address);
 
-    // Save the updated user in the database
-    await user.save();
+    // Save the updated customer in the database
+    await customer.save();
 
-    // Respond with a success message or the updated user data
-    res.status(200).json({ message: "Address created successfully", user });
+    // Respond with a success message or the updated customer data
+    res.status(200).json({ message: "Address created successfully", customer });
   } catch (error) {
     console.error("Error adding address:", error);
     res
