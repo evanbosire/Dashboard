@@ -13,4 +13,25 @@ router.get("/requested", async (req, res) => {
   }
 });
 
+// Post a new requested material
+router.post("/request-material", async (req, res) => {
+  const { materialName, quantity, deliveryDate, supplier } = req.body;
+
+  try {
+    const newRequestedMaterial = new Requested({
+      material: materialName,
+      requestedQuantity: quantity,
+      description: `Requested from ${supplier}`,
+      status: "Requested",
+      painter: "Inventory Manager", // Assuming the inventory manager is the one requesting
+      dateRequested: new Date(),
+    });
+
+    await newRequestedMaterial.save();
+    res.status(201).json(newRequestedMaterial);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
 module.exports = router;

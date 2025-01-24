@@ -16,6 +16,7 @@ const servicesPaymentRoutes = require("./routes/servicespaymentRoutes");
 const productionRoutes = require("./routes/productionRoutes");
 const messagesRoutes = require("./routes/messagesRoutes");
 const adminRoutes = require("./routes/adminRoutes"); // Admin routes for login and registration
+const requestedRawMaterialsRoutes = require("./routes/RequestedRawMaterialsRoutes");
 
 const app = express();
 const port = process.env.PORT || 5000; // Use the environment PORT variable
@@ -49,6 +50,8 @@ app.use("/api", servicesPaymentRoutes);
 app.use("/api", productionRoutes);
 app.use("/api", messagesRoutes);
 app.use("/api/admin", adminRoutes); // Admin routes for login and registration
+// Use the requested raw materials by inventory routes
+app.use("/api/inventory", requestedRawMaterialsRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
