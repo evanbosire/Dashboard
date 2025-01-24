@@ -35,17 +35,4 @@ router.post("/request-material", async (req, res) => {
   }
 });
 
-// GET all requested materials
-router.get("/requested-materials", async (req, res) => {
-  try {
-    const requestedMaterials = await Requested.find(); // Fetch all requested materials
-    res.status(200).json(requestedMaterials); // Send the data as JSON
-  } catch (err) {
-    res.status(500).json({
-      message: "Failed to fetch requested materials",
-      error: err.message,
-    });
-  }
-});
-
 module.exports = router;

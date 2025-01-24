@@ -1,0 +1,104 @@
+// src/components/Table/table.scss
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 1rem;
+    text-align: left;
+
+    th,
+    td {
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+    }
+
+    th {
+        background-color: #f4f4f4;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    tbody tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+
+        button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+
+            &.approve {
+                background-color: #4caf50;
+                color: white;
+
+                &:hover {
+                    background-color: #388e3c;
+                }
+            }
+
+            &.deactivate {
+                background-color: #f44336;
+                color: white;
+
+                &:hover {
+                    background-color: #d32f2f;
+                }
+            }
+
+            &.activate {
+                background-color: #45a049;
+                color: white;
+
+                &:hover {
+                    background-color: #388e3c;
+                }
+            }
+
+            &.suspend {
+                background-color: #4caf50;
+                color: white;
+
+                &:hover {
+                    background-color: #388e3c;
+                }
+            }
+
+            &.reject {
+                background-color: #f44336;
+                color: white;
+
+                &:hover {
+                    background-color: #d32f2f;
+                    color: #fff;
+                }
+            }
+
+            &.pending {
+                background-color: #f44336;
+                color: white;
+
+                &:hover {
+                    background-color: #d32f2f;
+                    color: #fff;
+                }
+            }
+        }
+    }
+}
+.no-data {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
