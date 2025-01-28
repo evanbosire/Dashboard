@@ -76,4 +76,64 @@ router.put("/requested-materials/:id", async (req, res) => {
   }
 });
 
+// Supply material
+router.post("/supply-material/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const updatedRequest = await RequestedMaterial.findByIdAndUpdate(
+      id,
+      {
+        status: "Supplied",
+        supplyStatus: "Pending Acceptance",
+        suppliedDate: new Date(),
+      },
+      { new: true }
+    );
+
+    res.json(updatedRequest);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get supplied materials (for inventory manager)
+router.get("/supplied-materials", async (req, res) => {
+  try {
+    const materials = await RequestedMaterial.find({
+      status: "Supplied",
+      supplyStatus: "Pending Acceptance",
+    }).sort({ suppliedDate: -1 });
+
+    res.json(materials);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Accept/Reject supplied material
+router.put("/supplied-materials/:id/process", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, remarks } = req.body;
+
+    const updateData = {
+      supplyStatus: action === "accept" ? "Accepted" : "Rejected",
+      status: action === "accept" ? "Accepted" : "Supply Rejected",
+      acceptanceDate: new Date(),
+      remarks,
+    };
+
+    const updatedRequest = await RequestedMaterial.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
+
+    res.json(updatedRequest);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;
