@@ -48,4 +48,32 @@ router.get("/requested-materials", async (req, res) => {
   }
 });
 
+// PUT route to update request status
+router.put("/requested-materials/:id", async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const updatedRequest = await Requested.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedRequest) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    res.status(200).json({
+      message: "Request status updated successfully",
+      data: updatedRequest,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to update request status",
+      error: err.message,
+    });
+  }
+});
+
 module.exports = router;
