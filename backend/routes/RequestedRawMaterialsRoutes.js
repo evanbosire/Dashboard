@@ -76,31 +76,44 @@ router.put("/requested-materials/:id", async (req, res) => {
   }
 });
 
-// Supply material
+// Supply Material API Endpoint
 router.post("/supply-material/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Check if the ID is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
+
+    // Find and update the requested material by ID
     const updatedRequest = await RequestedRawMaterials.findByIdAndUpdate(
       id,
       {
-        status: "Supplied",
-        supplyStatus: "Pending Acceptance",
-        suppliedDate: new Date(),
+        status: "Supplied", // Set status to 'Supplied'
+        supplyStatus: "Pending Acceptance", // Set supply status
+        suppliedDate: new Date(), // Set current date for suppliedDate
       },
-      { new: true }
+      { new: true } // Return the updated document
     );
 
+    // If no document is found, return a 404 error
     if (!updatedRequest) {
-      return res.status(404).json({ message: "Request not found" });
+      return res.status(404).json({ message: "Requested material not found" });
     }
 
-    res.json(updatedRequest);
+    // Respond with a success message and the updated document
+    res.status(200).json({
+      message: "Raw material successfully supplied.",
+      updatedRequest,
+    });
   } catch (error) {
+    console.error("Error in supply-material API:", error.message);
+
+    // Return a 500 error with the message
     res.status(500).json({ message: error.message });
   }
 });
-
 // Get supplied materials (for inventory manager)
 router.get("/supplied-materials", async (req, res) => {
   try {
