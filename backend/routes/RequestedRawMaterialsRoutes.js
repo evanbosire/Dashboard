@@ -81,7 +81,7 @@ router.post("/supply-material/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    const updatedRequest = await RequestedMaterial.findByIdAndUpdate(
+    const updatedRequest = await RequestedRawMaterials.findByIdAndUpdate(
       id,
       {
         status: "Supplied",
@@ -90,6 +90,10 @@ router.post("/supply-material/:id", async (req, res) => {
       },
       { new: true }
     );
+
+    if (!updatedRequest) {
+      return res.status(404).json({ message: "Request not found" });
+    }
 
     res.json(updatedRequest);
   } catch (error) {
@@ -100,7 +104,7 @@ router.post("/supply-material/:id", async (req, res) => {
 // Get supplied materials (for inventory manager)
 router.get("/supplied-materials", async (req, res) => {
   try {
-    const materials = await RequestedMaterial.find({
+    const materials = await RequestedRawMaterial.find({
       status: "Supplied",
       supplyStatus: "Pending Acceptance",
     }).sort({ suppliedDate: -1 });
@@ -124,7 +128,7 @@ router.put("/supplied-materials/:id/process", async (req, res) => {
       remarks,
     };
 
-    const updatedRequest = await RequestedMaterial.findByIdAndUpdate(
+    const updatedRequest = await RequestedRawMaterial.findByIdAndUpdate(
       id,
       updateData,
       { new: true }
