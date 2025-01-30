@@ -187,4 +187,23 @@ router.put("/supplied-materials/:id/process", async (req, res) => {
   }
 });
 
+// GET all accepted materials
+router.get("/accepted-materials", async (req, res) => {
+  try {
+    const acceptedMaterials = await Requested.find({ status: "Accepted" }).sort(
+      { acceptedDate: -1 }
+    ); // Add sorting by acceptance date if needed
+    res.status(200).json({
+      message: "Accepted materials fetched successfully",
+      data: acceptedMaterials,
+    });
+  } catch (err) {
+    console.error("Error in get accepted-materials API:", err);
+    res.status(500).json({
+      message: "Failed to fetch accepted materials",
+      error: err.message,
+    });
+  }
+});
+
 module.exports = router;
