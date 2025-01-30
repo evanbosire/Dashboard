@@ -127,24 +127,17 @@ router.post("/supply-material/:id", async (req, res) => {
   }
 });
 
-// Get supplied materials (for inventory manager)
+//GET all supplied materials sorted by suppliedDate in descending order
 router.get("/supplied-materials", async (req, res) => {
   try {
-    const materials = await Requested.find({
-      status: "Supplied",
-      supplyStatus: "Pending Acceptance",
-    }).sort({ suppliedDate: -1 });
+    const materials = await Requested.find({ status: "Supplied" }).sort({
+      suppliedDate: -1,
+    });
 
-    res.status(200).json({
-      message: "Supplied materials fetched successfully",
-      data: materials,
-    });
+    res.status(200).json(materials);
   } catch (error) {
-    console.error("Error in get supplied-materials API:", error);
-    res.status(500).json({
-      message: "Failed to fetch supplied materials",
-      error: error.message,
-    });
+    console.error("Error fetching supplied materials:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 });
 
