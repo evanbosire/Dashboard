@@ -16,8 +16,16 @@
 //   },
 //   status: {
 //     type: String,
-//     enum: ["Requested", "Approved", "Rejected"], // Updated enum values
-//     default: "Requested", // Default status is "Requested"
+//     enum: [
+//       "Requested",
+//       "Approved",
+//       "Rejected",
+//       "Pending",
+//       "Supplied",
+//       "Accepted",
+//       "Supply Rejected",
+//     ], // Add more statuses if needed
+//     default: "Requested",
 //   },
 //   supplier: {
 //     type: String,
@@ -29,7 +37,21 @@
 //   },
 //   dateRequested: {
 //     type: Date,
-//     default: Date.now, // Automatically set to the current date
+//     default: Date.now,
+//   },
+//   supplyStatus: {
+//     type: String,
+//     enum: ["Not Supplied", "Pending Acceptance", "Accepted", "Rejected"],
+//     default: "Not Supplied", // Default supply status
+//   },
+//   suppliedDate: {
+//     type: Date,
+//   },
+//   acceptanceDate: {
+//     type: Date,
+//   },
+//   remarks: {
+//     type: String,
 //   },
 // });
 
@@ -40,7 +62,6 @@
 
 // module.exports = RequestedRawMaterials;
 
-// models/Requested.js
 const mongoose = require("mongoose");
 
 const requestedRawMaterialsSchema = new mongoose.Schema({
@@ -66,7 +87,7 @@ const requestedRawMaterialsSchema = new mongoose.Schema({
       "Supplied",
       "Accepted",
       "Supply Rejected",
-    ], // Add more statuses if needed
+    ],
     default: "Requested",
   },
   supplier: {
@@ -84,7 +105,7 @@ const requestedRawMaterialsSchema = new mongoose.Schema({
   supplyStatus: {
     type: String,
     enum: ["Not Supplied", "Pending Acceptance", "Accepted", "Rejected"],
-    default: "Not Supplied", // Default supply status
+    default: "Not Supplied",
   },
   suppliedDate: {
     type: Date,
@@ -94,6 +115,11 @@ const requestedRawMaterialsSchema = new mongoose.Schema({
   },
   remarks: {
     type: String,
+  },
+  cost: {
+    // ✅ Add this field
+    type: Number,
+    required: true, // Optional, set `true` if cost is always required
   },
 });
 

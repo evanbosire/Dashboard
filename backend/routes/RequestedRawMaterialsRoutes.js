@@ -311,10 +311,48 @@ router.put("/requested-materials/:id", async (req, res) => {
   }
 });
 
+// // Supply Material API Endpoint
+// router.post("/supply-material/:id", async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     // Check if the ID is a valid MongoDB ObjectId
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ message: "Invalid ID format" });
+//     }
+
+//     // Find and update the requested material by ID
+//     const updatedRequest = await Requested.findByIdAndUpdate(
+//       id,
+//       {
+//         status: "Supplied",
+//         supplyStatus: "Pending Acceptance",
+//         suppliedDate: new Date(),
+//       },
+//       { new: true }
+//     );
+
+//     if (!updatedRequest) {
+//       return res.status(404).json({ message: "Requested material not found" });
+//     }
+
+//     res.status(200).json({
+//       message: "Raw material successfully supplied.",
+//       data: updatedRequest,
+//     });
+//   } catch (error) {
+//     console.error("Error in supply-material API:", error);
+//     res.status(500).json({
+//       message: "Failed to supply material",
+//       error: error.message,
+//     });
+//   }
+// });
 // Supply Material API Endpoint
 router.post("/supply-material/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    const { cost } = req.body; // Extract cost from the request body
 
     // Check if the ID is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -328,6 +366,7 @@ router.post("/supply-material/:id", async (req, res) => {
         status: "Supplied",
         supplyStatus: "Pending Acceptance",
         suppliedDate: new Date(),
+        cost: cost, // Add the cost to the updated request
       },
       { new: true }
     );
