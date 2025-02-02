@@ -55,7 +55,7 @@ const requestedRawMaterialsSchema = new mongoose.Schema({
   cost: {
     // ✅ Add this field
     type: Number,
-    required: true, // Optional, set `true` if cost is always required
+    required: false, // Optional, set `true` if cost is always required
   },
 });
 
