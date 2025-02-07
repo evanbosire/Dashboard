@@ -160,52 +160,6 @@ router.get("/supplied-materials", async (req, res) => {
   }
 });
 
-// // Accept/Reject supplied material
-// router.put("/supplied-materials/:id/process", async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { action, remarks } = req.body;
-
-//     // Validate MongoDB ObjectId
-//     if (!mongoose.Types.ObjectId.isValid(id)) {
-//       return res.status(400).json({ message: "Invalid ID format" });
-//     }
-
-//     // Validate action
-//     if (!action || !["accept", "reject"].includes(action)) {
-//       return res
-//         .status(400)
-//         .json({ message: "Invalid action. Must be 'accept' or 'reject'" });
-//     }
-
-//     const updateData = {
-//       supplyStatus: action === "accept" ? "Accepted" : "Rejected",
-//       status: action === "accept" ? "Accepted" : "Supply Rejected",
-//       acceptanceDate: new Date(),
-//       remarks: remarks || "",
-//     };
-
-//     const updatedRequest = await Requested.findByIdAndUpdate(id, updateData, {
-//       new: true,
-//     });
-
-//     if (!updatedRequest) {
-//       return res.status(404).json({ message: "Requested material not found" });
-//     }
-
-//     res.status(200).json({
-//       message: `Material ${action}ed successfully`,
-//       data: updatedRequest,
-//     });
-//   } catch (error) {
-//     console.error("Error in process supplied-materials API:", error);
-//     res.status(500).json({
-//       message: "Failed to process material",
-//       error: error.message,
-//     });
-//   }
-// });
-
 router.put("/supplied-materials/:id/process", async (req, res) => {
   try {
     const { id } = req.params;
@@ -301,6 +255,65 @@ router.post("/pay-material/:id", async (req, res) => {
     res
       .status(500)
       .json({ message: "Error during payment", error: error.message });
+  }
+});
+
+router.get("/download-receipt/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid ID format" });
+  }
+
+  try {
+    const material = await Requested.findById(id).populate("customer supplier");
+    console.log("Material data in receipt route:", material); // Debugging
+
+    if (!material) {
+      return res.status(404).json({ message: "Material not found" });
+    }
+
+    const receiptContent = `
+---------------------------------------------------------
+                CORRUGATED SHEETS LIMITED
+              Receipt for Material Supply
+                www.corrugatedsheetsltd.com
+
+Receipt Number: ${material._id}                            Date: ${
+      new Date().toISOString().split("T")[0]
+    }
+
+---------------------------------------------------------
+Item Description:
+- Material: ${material.material || "N/A"}
+- Quantity: ${material.requestedQuantity || "N/A"}
+- Total Cost: ${material.cost || "N/A"} KSH
+
+---------------------------------------------------------
+Payment Information:
+Transaction Ref. No: ${material.paymentCode || "N/A"}
+Payment Status: ${material.paymentStatus || "N/A"}
+
+---------------------------------------------------------
+Summary:
+Total Amount: ${material.cost || 0} KSH
+
+---------------------------------------------------------
+Thank you for your business!
+---------------------------------------------------------
+    `;
+
+    res.setHeader("Content-Type", "application/octet-stream");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=receipt_${id}.txt`
+    );
+    res.send(Buffer.from(receiptContent, "utf-8"));
+  } catch (err) {
+    console.error("Error in generating receipt:", err);
+    res
+      .status(500)
+      .json({ message: "Failed to generate receipt", error: err.message });
   }
 });
 

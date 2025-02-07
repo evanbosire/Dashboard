@@ -57,7 +57,16 @@ const requestedRawMaterialsSchema = new mongoose.Schema({
     type: Number,
     required: false, // Optional, set `true` if cost is always required
   },
+  paymentCode: {
+    type: String,
+    required: false, // Temporarily make this false
+  },
   paymentStatus: { type: String, default: "Unpaid" },
+  customer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Customer", // Reference to Customer model
+    required: true, // Make this required to link each raw material request to a customer
+  },
 });
 
 const RequestedRawMaterials = mongoose.model(
