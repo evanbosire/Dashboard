@@ -282,4 +282,26 @@ router.get("/accepted-materials", async (req, res) => {
   }
 });
 
+// Pay for a material
+router.post("/pay-material/:id", async (req, res) => {
+  const { paymentCode, amountPaid, supplier } = req.body;
+  try {
+    const material = await Requested.findByIdAndUpdate(
+      // Use Requested instead of Material
+      req.params.id,
+      { paymentStatus: "Paid", paymentCode, amountPaid, supplier },
+      { new: true }
+    );
+    if (!material) {
+      return res.status(404).json({ message: "Material not found" });
+    }
+    res.status(201).json({ data: material });
+  } catch (error) {
+    console.error("Error during payment:", error); // Log error for debugging
+    res
+      .status(500)
+      .json({ message: "Error during payment", error: error.message });
+  }
+});
+
 module.exports = router;

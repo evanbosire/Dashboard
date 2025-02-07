@@ -57,6 +57,7 @@ const requestedRawMaterialsSchema = new mongoose.Schema({
     type: Number,
     required: false, // Optional, set `true` if cost is always required
   },
+  paymentStatus: { type: String, default: "Unpaid" },
 });
 
 const RequestedRawMaterials = mongoose.model(
