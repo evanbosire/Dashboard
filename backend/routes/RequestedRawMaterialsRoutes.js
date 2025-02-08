@@ -260,193 +260,6 @@ router.post("/pay-material/:id", async (req, res) => {
   }
 });
 
-// router.get("/download-receipt/:id", async (req, res) => {
-//   const { id } = req.params;
-
-//   if (!mongoose.Types.ObjectId.isValid(id)) {
-//     return res.status(400).json({ message: "Invalid ID format" });
-//   }
-
-//   try {
-//     const material = await Requested.findById(id).populate("customer supplier");
-//     console.log("Material data in receipt route:", material); // Debugging
-
-//     if (!material) {
-//       return res.status(404).json({ message: "Material not found" });
-//     }
-
-//     const receiptContent = `
-// ---------------------------------------------------------
-//                 CORRUGATED SHEETS LIMITED
-//               Receipt for Material Supply
-//                 www.corrugatedsheetsltd.com
-
-// Receipt Number: ${material._id}                            Date: ${
-//       new Date().toISOString().split("T")[0]
-//     }
-
-// ---------------------------------------------------------
-// Item Description:
-// - Material: ${material.material || "N/A"}
-// - Quantity: ${material.requestedQuantity || "N/A"}
-// - Total Cost: ${material.cost || "N/A"} KSH
-
-// ---------------------------------------------------------
-// Payment Information:
-// Transaction Ref. No: ${material.paymentCode || "N/A"}
-// Payment Status: ${material.paymentStatus || "N/A"}
-
-// ---------------------------------------------------------
-// Summary:
-// Total Amount: ${material.cost || 0} KSH
-
-// ---------------------------------------------------------
-// Thank you for your business!
-// ---------------------------------------------------------
-//     `;
-
-//     res.setHeader("Content-Type", "application/octet-stream");
-//     res.setHeader(
-//       "Content-Disposition",
-//       `attachment; filename=receipt_${id}.txt`
-//     );
-//     res.send(Buffer.from(receiptContent, "utf-8"));
-//   } catch (err) {
-//     console.error("Error in generating receipt:", err);
-//     res
-//       .status(500)
-//       .json({ message: "Failed to generate receipt", error: err.message });
-//   }
-// });
-
-// router.get("/download-receipt/:id", async (req, res) => {
-//   const { id } = req.params;
-
-//   if (!mongoose.Types.ObjectId.isValid(id)) {
-//     return res.status(400).json({ message: "Invalid ID format" });
-//   }
-
-//   try {
-//     const material = await Requested.findById(id).populate("customer supplier");
-//     console.log("Material data in receipt route:", material); // Debugging
-
-//     if (!material) {
-//       return res.status(404).json({ message: "Material not found" });
-//     }
-
-//     // Create a PDF document
-//     const doc = new PDFDocument();
-//     const filePath = `./receipt_${id}.pdf`;
-
-//     // Pipe the PDF to a file
-//     doc.pipe(fs.createWriteStream(filePath));
-
-//     // Add content to the PDF
-//     doc.fontSize(16).text("CORRUGATED SHEETS LIMITED", { align: "center" });
-//     doc.fontSize(12).text("Receipt for Material Supply", { align: "center" });
-//     doc.fontSize(10).text("www.corrugatedsheetsltd.com", { align: "center" });
-//     doc.moveDown();
-//     doc.fontSize(10).text(`Receipt Number: ${material._id}`);
-//     doc.text(`Date: ${new Date().toISOString().split("T")[0]}`);
-//     doc.moveDown();
-//     doc.text("Item Description:");
-//     doc.text(`- Material: ${material.material || "N/A"}`);
-//     doc.text(`- Quantity: ${material.requestedQuantity || "N/A"}`);
-//     doc.text(`- Total Cost: ${material.cost || "N/A"} KSH`);
-//     doc.moveDown();
-//     doc.text("Payment Information:");
-//     doc.text(`Transaction Ref. No: ${material.paymentCode || "N/A"}`);
-//     doc.text(`Payment Status: ${material.paymentStatus || "N/A"}`);
-//     doc.moveDown();
-//     doc.text("Summary:");
-//     doc.text(`Total Amount: ${material.cost || 0} KSH`);
-//     doc.moveDown();
-//     doc.text("Thank you for your business!");
-
-//     // Finalize the PDF
-//     doc.end();
-
-//     // Send the PDF file as a response
-//     res.setHeader("Content-Type", "application/pdf");
-//     res.setHeader(
-//       "Content-Disposition",
-//       `attachment; filename=receipt_${id}.pdf`
-//     );
-//     fs.createReadStream(filePath).pipe(res);
-
-//     // Delete the temporary file after sending
-//     fs.unlinkSync(filePath);
-//   } catch (err) {
-//     console.error("Error in generating receipt:", err);
-//     res
-//       .status(500)
-//       .json({ message: "Failed to generate receipt", error: err.message });
-//   }
-// });
-// router.get("/download-receipt/:id", async (req, res) => {
-//   const { id } = req.params;
-
-//   if (!mongoose.Types.ObjectId.isValid(id)) {
-//     return res.status(400).json({ message: "Invalid ID format" });
-//   }
-
-//   try {
-//     const material = await Requested.findById(id).populate("customer supplier");
-//     console.log("Material data in receipt route:", material); // Debugging
-
-//     if (!material) {
-//       return res.status(404).json({ message: "Material not found" });
-//     }
-
-//     // Create a PDF document
-//     const doc = new PDFDocument();
-
-//     // Set response headers before sending any data
-//     res.setHeader("Content-Type", "application/pdf");
-//     res.setHeader(
-//       "Content-Disposition",
-//       `attachment; filename=receipt_${id}.pdf`
-//     );
-
-//     // Pipe the PDF directly to the response
-//     doc.pipe(res);
-
-//     // Add content to the PDF
-//     doc.fontSize(16).text("CORRUGATED SHEETS LIMITED", { align: "center" });
-//     doc.fontSize(12).text("Receipt for Material Supply", { align: "center" });
-//     doc.fontSize(10).text("www.corrugatedsheetsltd.com", { align: "center" });
-//     doc.moveDown();
-//     doc.fontSize(10).text(`Receipt Number: ${material._id}`);
-//     doc.text(`Date: ${new Date().toISOString().split("T")[0]}`);
-//     doc.moveDown();
-//     doc.text("Item Description:");
-//     doc.text(`- Material: ${material.material || "N/A"}`);
-//     doc.text(`- Quantity: ${material.requestedQuantity || "N/A"}`);
-//     doc.text(`- Total Cost: ${material.cost || "N/A"} KSH`);
-//     doc.moveDown();
-//     doc.text("Payment Information:");
-//     doc.text(`Transaction Ref. No: ${material.paymentCode || "N/A"}`);
-//     doc.text(`Payment Status: ${material.paymentStatus || "N/A"}`);
-//     doc.moveDown();
-//     doc.text("Summary:");
-//     doc.text(`Total Amount: ${material.cost || 0} KSH`);
-//     doc.moveDown();
-//     doc.text("Thank you for your business!");
-
-//     // End the document
-//     doc.end();
-//   } catch (err) {
-//     console.error("Error in generating receipt:", err);
-//     // Only send error response if headers haven't been sent yet
-//     if (!res.headersSent) {
-//       res.status(500).json({
-//         message: "Failed to generate receipt",
-//         error: err.message,
-//       });
-//     }
-//   }
-// });
-
 router.get("/download-receipt/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -545,6 +358,114 @@ router.get("/download-receipt/:id", async (req, res) => {
         error: err.message,
       });
     }
+  }
+});
+
+// Get all accepted raw materials (for Inventory Manager)
+router.get("/stock", async (req, res) => {
+  try {
+    const rawMaterials = await Requested.find({ status: "Accepted" });
+    res.json(rawMaterials);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+//  Inventory Manager Requests Products to be Manufactured
+router.post("/request-manufacturing", async (req, res) => {
+  try {
+    const { material, requestedQuantity, description } = req.body;
+
+    if (!material || !requestedQuantity || !description) {
+      return res
+        .status(400)
+        .json({ error: "Material, quantity, and description are required" });
+    }
+
+    const newRequest = new Requested({
+      material,
+      requestedQuantity,
+      description,
+      status: "Requested",
+      supplier: "Internal",
+      deliveryDate: new Date(),
+    });
+
+    await newRequest.save();
+
+    res.status(201).json({
+      message: "Manufacturing request sent successfully",
+      request: newRequest,
+    });
+  } catch (err) {
+    console.error("Error saving manufacturing request:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Production Manager Requests Raw Materials from Inventory
+router.post("/request-raw-materials", async (req, res) => {
+  const { material, requestedQuantity, description } = req.body;
+
+  try {
+    const newRequest = new Requested({
+      material,
+      requestedQuantity,
+      description,
+      status: "Requested",
+      supplier: "Supplier Name",
+      deliveryDate: new Date(),
+    });
+
+    await newRequest.save();
+    res.json({ message: "Raw material request sent successfully", newRequest });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update Stock When Raw Materials Are Received
+router.put("/update-stock/:id", async (req, res) => {
+  try {
+    const material = await Requested.findById(req.params.id);
+
+    if (!material) {
+      return res.status(404).json({ message: "Material not found" });
+    }
+
+    material.status = "Accepted"; // Mark as accepted
+    material.supplyStatus = "Accepted"; // Update supply status
+    material.acceptanceDate = new Date();
+    material.requestedQuantity += req.body.additionalQuantity; // Increase stock
+    await material.save();
+
+    res.json({ message: "Stock updated successfully", material });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Allocate Raw Materials to Production Manager
+router.post("/allocate", async (req, res) => {
+  const { materialId, quantity } = req.body;
+
+  try {
+    const rawMaterial = await Requested.findById(materialId);
+
+    if (!rawMaterial) {
+      return res.status(404).json({ message: "Material not found" });
+    }
+
+    if (rawMaterial.requestedQuantity < quantity) {
+      return res.status(400).json({ message: "Not enough stock available" });
+    }
+
+    rawMaterial.requestedQuantity -= quantity;
+    await rawMaterial.save();
+
+    res.json({ message: "Material allocated successfully", rawMaterial });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

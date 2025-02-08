@@ -65,7 +65,7 @@ const requestedRawMaterialsSchema = new mongoose.Schema({
   customer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Customer", // Reference to Customer model
-    required: true, // Make this required to link each raw material request to a customer
+    required: false, // Make this required to link each raw material request to a customer
   },
 });
 
