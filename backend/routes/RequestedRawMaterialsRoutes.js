@@ -469,4 +469,16 @@ router.post("/allocate", async (req, res) => {
   }
 });
 
+// Production manager to Fetch all requested products
+
+router.get("/fetch-requests", async (req, res) => {
+  try {
+    const requests = await Requested.find({}); // Fetch all requests
+    res.status(200).json(requests);
+  } catch (err) {
+    console.error("Error fetching requests:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 module.exports = router;
