@@ -478,17 +478,19 @@ router.get("/download-receipt/:id", async (req, res) => {
     // Helper function to add separator line
     const addSeparatorLine = () => {
       doc.text("-----------------------------------------------", {
-        align: "center",
+        align: "left",
       });
     };
 
-    // Add initial separator
     addSeparatorLine();
 
     // Company header
-    doc.fontSize(16).text("CORRUGATED SHEETS LIMITED", { align: "center" });
+    doc.fontSize(18).text("CORRUGATED SHEETS LIMITED", { align: "center" });
     doc.fontSize(12).text("Receipt for Material Supply", { align: "center" });
     doc.fontSize(10).text("www.corrugatedsheetsltd.com", { align: "center" });
+
+    addSeparatorLine();
+    addSeparatorLine();
 
     // Receipt details
     doc
@@ -505,9 +507,9 @@ router.get("/download-receipt/:id", async (req, res) => {
 
     // Item Description
     doc.text("Item Description:");
-    doc.text(`- Material: ${material.material || "N/A"}`);
-    doc.text(`- Quantity: ${material.requestedQuantity || "N/A"}`);
-    doc.text(`- Total Cost: ${material.cost || "N/A"} KSH`);
+    doc.text(`* Material: ${material.material || "N/A"}`);
+    doc.text(`* Quantity: ${material.requestedQuantity || "N/A"}`);
+    doc.text(`* Total Cost: ${material.cost || "N/A"} KSH`);
 
     addSeparatorLine();
 
@@ -521,11 +523,15 @@ router.get("/download-receipt/:id", async (req, res) => {
     // Summary
     doc.text("Summary:");
     doc.text(`Total Amount: ${material.cost || 0} KSH`);
+    doc.text(`Delivery Status: ${material.status || "N/A"}`);
+    if (material.remarks) {
+      doc.text(`Remarks: ${material.remarks}`);
+    }
 
     addSeparatorLine();
 
     // Footer
-    doc.text("Thank you for your business!", { align: "center" });
+    doc.text("Thank you for your business!", { align: "left" });
 
     addSeparatorLine();
 
