@@ -383,6 +383,70 @@ router.post("/pay-material/:id", async (req, res) => {
 //       .json({ message: "Failed to generate receipt", error: err.message });
 //   }
 // });
+// router.get("/download-receipt/:id", async (req, res) => {
+//   const { id } = req.params;
+
+//   if (!mongoose.Types.ObjectId.isValid(id)) {
+//     return res.status(400).json({ message: "Invalid ID format" });
+//   }
+
+//   try {
+//     const material = await Requested.findById(id).populate("customer supplier");
+//     console.log("Material data in receipt route:", material); // Debugging
+
+//     if (!material) {
+//       return res.status(404).json({ message: "Material not found" });
+//     }
+
+//     // Create a PDF document
+//     const doc = new PDFDocument();
+
+//     // Set response headers before sending any data
+//     res.setHeader("Content-Type", "application/pdf");
+//     res.setHeader(
+//       "Content-Disposition",
+//       `attachment; filename=receipt_${id}.pdf`
+//     );
+
+//     // Pipe the PDF directly to the response
+//     doc.pipe(res);
+
+//     // Add content to the PDF
+//     doc.fontSize(16).text("CORRUGATED SHEETS LIMITED", { align: "center" });
+//     doc.fontSize(12).text("Receipt for Material Supply", { align: "center" });
+//     doc.fontSize(10).text("www.corrugatedsheetsltd.com", { align: "center" });
+//     doc.moveDown();
+//     doc.fontSize(10).text(`Receipt Number: ${material._id}`);
+//     doc.text(`Date: ${new Date().toISOString().split("T")[0]}`);
+//     doc.moveDown();
+//     doc.text("Item Description:");
+//     doc.text(`- Material: ${material.material || "N/A"}`);
+//     doc.text(`- Quantity: ${material.requestedQuantity || "N/A"}`);
+//     doc.text(`- Total Cost: ${material.cost || "N/A"} KSH`);
+//     doc.moveDown();
+//     doc.text("Payment Information:");
+//     doc.text(`Transaction Ref. No: ${material.paymentCode || "N/A"}`);
+//     doc.text(`Payment Status: ${material.paymentStatus || "N/A"}`);
+//     doc.moveDown();
+//     doc.text("Summary:");
+//     doc.text(`Total Amount: ${material.cost || 0} KSH`);
+//     doc.moveDown();
+//     doc.text("Thank you for your business!");
+
+//     // End the document
+//     doc.end();
+//   } catch (err) {
+//     console.error("Error in generating receipt:", err);
+//     // Only send error response if headers haven't been sent yet
+//     if (!res.headersSent) {
+//       res.status(500).json({
+//         message: "Failed to generate receipt",
+//         error: err.message,
+//       });
+//     }
+//   }
+// });
+
 router.get("/download-receipt/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -392,7 +456,7 @@ router.get("/download-receipt/:id", async (req, res) => {
 
   try {
     const material = await Requested.findById(id).populate("customer supplier");
-    console.log("Material data in receipt route:", material); // Debugging
+    console.log("Material data in receipt route:", material);
 
     if (!material) {
       return res.status(404).json({ message: "Material not found" });
@@ -411,33 +475,64 @@ router.get("/download-receipt/:id", async (req, res) => {
     // Pipe the PDF directly to the response
     doc.pipe(res);
 
-    // Add content to the PDF
+    // Helper function to add separator line
+    const addSeparatorLine = () => {
+      doc.text("-----------------------------------------------", {
+        align: "center",
+      });
+    };
+
+    // Add initial separator
+    addSeparatorLine();
+
+    // Company header
     doc.fontSize(16).text("CORRUGATED SHEETS LIMITED", { align: "center" });
     doc.fontSize(12).text("Receipt for Material Supply", { align: "center" });
     doc.fontSize(10).text("www.corrugatedsheetsltd.com", { align: "center" });
-    doc.moveDown();
-    doc.fontSize(10).text(`Receipt Number: ${material._id}`);
-    doc.text(`Date: ${new Date().toISOString().split("T")[0]}`);
-    doc.moveDown();
+
+    // Receipt details
+    doc
+      .fontSize(10)
+      .text(`Receipt Number: ${material._id}`, {
+        align: "left",
+        continued: true,
+      })
+      .text(`Date: ${new Date().toISOString().split("T")[0]}`, {
+        align: "right",
+      });
+
+    addSeparatorLine();
+
+    // Item Description
     doc.text("Item Description:");
     doc.text(`- Material: ${material.material || "N/A"}`);
     doc.text(`- Quantity: ${material.requestedQuantity || "N/A"}`);
     doc.text(`- Total Cost: ${material.cost || "N/A"} KSH`);
-    doc.moveDown();
+
+    addSeparatorLine();
+
+    // Payment Information
     doc.text("Payment Information:");
     doc.text(`Transaction Ref. No: ${material.paymentCode || "N/A"}`);
     doc.text(`Payment Status: ${material.paymentStatus || "N/A"}`);
-    doc.moveDown();
+
+    addSeparatorLine();
+
+    // Summary
     doc.text("Summary:");
     doc.text(`Total Amount: ${material.cost || 0} KSH`);
-    doc.moveDown();
-    doc.text("Thank you for your business!");
+
+    addSeparatorLine();
+
+    // Footer
+    doc.text("Thank you for your business!", { align: "center" });
+
+    addSeparatorLine();
 
     // End the document
     doc.end();
   } catch (err) {
     console.error("Error in generating receipt:", err);
-    // Only send error response if headers haven't been sent yet
     if (!res.headersSent) {
       res.status(500).json({
         message: "Failed to generate receipt",
