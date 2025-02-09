@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const Requested = require("../models/RequestedRawMaterials");
+const Employee = require("../models/Employee");
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
 
@@ -403,11 +404,49 @@ router.post("/request-manufacturing", async (req, res) => {
   }
 });
 
-// Production Manager Requests Raw Materials from Inventory
+// production manager views requested products by the inventory
+router.get("/view-manufacturing-requests", async (req, res) => {
+  try {
+    // Fetch all manufacturing requests from the database
+    const manufacturingRequests = await Requested.find({
+      supplier: "Internal",
+    }).lean(); // Convert Mongoose documents to plain objects
+
+    // Debugging log to check fetched data
+    console.log("Fetched Manufacturing Requests:", manufacturingRequests);
+
+    if (manufacturingRequests.length === 0) {
+      return res.status(404).json({
+        message: "No manufacturing requests found from Inventory Managers",
+      });
+    }
+
+    res.status(200).json({
+      message: "Manufacturing requests fetched successfully",
+      requests: manufacturingRequests,
+    });
+  } catch (err) {
+    console.error("Error fetching manufacturing requests:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// production manager requests raw material to manufactur the requested product by inventory
 router.post("/request-raw-materials", async (req, res) => {
   const { material, requestedQuantity, description } = req.body;
 
   try {
+    // First find a Production Manager
+    const productionManager = await Employee.findOne({
+      role: "Production manager",
+    });
+    console.log("my production:", productionManager);
+    if (!productionManager) {
+      return res.status(400).json({
+        message: "No Production Manager found in the system",
+      });
+    }
+
     const newRequest = new Requested({
       material,
       requestedQuantity,
@@ -415,11 +454,151 @@ router.post("/request-raw-materials", async (req, res) => {
       status: "Requested",
       supplier: "Supplier Name",
       deliveryDate: new Date(),
+      requestedBy: productionManager._id, // Automatically use the Production Manager's ID
     });
 
     await newRequest.save();
-    res.json({ message: "Raw material request sent successfully", newRequest });
+    res.json({
+      message: "Raw material request sent successfully",
+      newRequest,
+      requestedBy: {
+        name: `${productionManager.firstName} ${productionManager.lastName}`,
+        role: productionManager.role,
+      },
+    });
   } catch (err) {
+    console.error("Error creating request:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Inventory to view requested raw materials by production manager
+router.get("/view-raw-material-requests", async (req, res) => {
+  try {
+    // Fetch requests and populate the 'requestedBy' field
+    const requests = await Requested.find({})
+      .populate({
+        path: "requestedBy", // Populating the requestedBy field to get employee details
+        select: "role firstName lastName", // Selecting relevant fields
+      })
+      .lean(); // Convert Mongoose documents to plain objects
+
+    // Filter requests to only those made by a Production Manager
+    const filteredRequests = requests.filter(
+      (request) => request.requestedBy?.role === "Production manager"
+    );
+
+    if (filteredRequests.length === 0) {
+      return res.status(404).json({
+        message: "No raw material requests found from Production Managers",
+      });
+    }
+
+    res.status(200).json({
+      message: "Requests fetched successfully",
+      requests: filteredRequests,
+    });
+  } catch (err) {
+    console.error("Error fetching requests:", err); // Log the error for debugging
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Allocate Raw Materials to Production Manager
+router.post("/allocate", async (req, res) => {
+  const { materialId, quantity } = req.body;
+
+  try {
+    // First find a Production Manager
+    const productionManager = await Employee.findOne({
+      role: "Production manager",
+    });
+    if (!productionManager) {
+      return res.status(400).json({
+        message: "No Production Manager found in the system",
+      });
+    }
+
+    // Find the material
+    const rawMaterial = await Requested.findById(materialId);
+
+    if (!rawMaterial) {
+      return res.status(404).json({ message: "Material not found" });
+    }
+
+    // Basic quantity validation
+    if (!quantity || quantity <= 0) {
+      return res
+        .status(400)
+        .json({ message: "Please provide a valid quantity" });
+    }
+
+    if (rawMaterial.requestedQuantity < quantity) {
+      return res.status(400).json({
+        message: "Not enough stock available",
+        requested: quantity,
+        available: rawMaterial.requestedQuantity,
+      });
+    }
+
+    // Update the material with all required fields
+    rawMaterial.requestedQuantity -= quantity;
+    rawMaterial.status = "Allocated";
+    rawMaterial.supplyStatus = "Pending Acceptance";
+    rawMaterial.requestedBy = productionManager._id; // Set the Production Manager ID
+
+    // Save the changes
+    const updatedMaterial = await rawMaterial.save();
+
+    res.json({
+      message: "Material allocated successfully",
+      allocation: {
+        material: updatedMaterial.material,
+        allocatedQuantity: quantity,
+        remainingQuantity: updatedMaterial.requestedQuantity,
+        status: updatedMaterial.status,
+        supplyStatus: updatedMaterial.supplyStatus,
+        allocatedTo: {
+          id: productionManager._id,
+          name: `${productionManager.firstName} ${productionManager.lastName}`,
+          role: productionManager.role,
+        },
+      },
+    });
+  } catch (err) {
+    console.error("Error during allocation:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Fetch Raw Materials Allocated to the Production Manager
+router.get("/allocated-materials", async (req, res) => {
+  try {
+    // Fetch materials that have been allocated (status changed or quantity modified)
+    const allocatedMaterials = await Requested.find({
+      status: "Allocated", // Assuming you update the status when allocating
+    })
+      .populate({
+        path: "requestedBy",
+        select: "role firstName lastName", // Select relevant user details
+      })
+      .lean(); // Convert Mongoose docs to plain objects
+
+    // Debugging log
+    console.log("Allocated Materials:", allocatedMaterials);
+
+    if (allocatedMaterials.length === 0) {
+      return res.status(404).json({
+        message: "No allocated raw materials found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Allocated raw materials fetched successfully",
+      allocatedMaterials,
+    });
+  } catch (err) {
+    console.error("Error fetching allocated materials:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -442,42 +621,6 @@ router.put("/update-stock/:id", async (req, res) => {
     res.json({ message: "Stock updated successfully", material });
   } catch (err) {
     res.status(500).json({ error: err.message });
-  }
-});
-
-// Allocate Raw Materials to Production Manager
-router.post("/allocate", async (req, res) => {
-  const { materialId, quantity } = req.body;
-
-  try {
-    const rawMaterial = await Requested.findById(materialId);
-
-    if (!rawMaterial) {
-      return res.status(404).json({ message: "Material not found" });
-    }
-
-    if (rawMaterial.requestedQuantity < quantity) {
-      return res.status(400).json({ message: "Not enough stock available" });
-    }
-
-    rawMaterial.requestedQuantity -= quantity;
-    await rawMaterial.save();
-
-    res.json({ message: "Material allocated successfully", rawMaterial });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Production manager to Fetch all requested products
-
-router.get("/fetch-requests", async (req, res) => {
-  try {
-    const requests = await Requested.find({}); // Fetch all requests
-    res.status(200).json(requests);
-  } catch (err) {
-    console.error("Error fetching requests:", err);
-    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 

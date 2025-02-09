@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const Employee = require("./Employee");
 
 const requestedRawMaterialsSchema = new mongoose.Schema({
   material: {
@@ -23,6 +24,7 @@ const requestedRawMaterialsSchema = new mongoose.Schema({
       "Supplied",
       "Accepted",
       "Supply Rejected",
+      "Allocated",
     ],
     default: "Requested",
   },
@@ -66,6 +68,11 @@ const requestedRawMaterialsSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Customer", // Reference to Customer model
     required: false, // Make this required to link each raw material request to a customer
+  },
+  requestedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Employee", // This should reference the Employee model
+    required: true, // This links the request to an employee (e.g., a Production Manager)
   },
 });
 
