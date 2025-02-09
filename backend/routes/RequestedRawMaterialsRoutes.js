@@ -4,7 +4,6 @@ const mongoose = require("mongoose");
 const Requested = require("../models/RequestedRawMaterials");
 const Employee = require("../models/Employee");
 const PDFDocument = require("pdfkit");
-const fs = require("fs");
 
 // POST route to handle raw material requests
 router.post("/request-material", async (req, res) => {
@@ -505,11 +504,76 @@ router.get("/view-raw-material-requests", async (req, res) => {
 });
 
 // Allocate Raw Materials to Production Manager
+// router.post("/allocate", async (req, res) => {
+//   const { materialId, quantity } = req.body;
+
+//   try {
+//     // First find a Production Manager
+//     const productionManager = await Employee.findOne({
+//       role: "Production manager",
+//     });
+//     if (!productionManager) {
+//       return res.status(400).json({
+//         message: "No Production Manager found in the system",
+//       });
+//     }
+
+//     // Find the material
+//     const rawMaterial = await Requested.findById(materialId);
+
+//     if (!rawMaterial) {
+//       return res.status(404).json({ message: "Material not found" });
+//     }
+
+//     // Basic quantity validation
+//     if (!quantity || quantity <= 0) {
+//       return res
+//         .status(400)
+//         .json({ message: "Please provide a valid quantity" });
+//     }
+
+//     if (rawMaterial.requestedQuantity < quantity) {
+//       return res.status(400).json({
+//         message: "Not enough stock available",
+//         requested: quantity,
+//         available: rawMaterial.requestedQuantity,
+//       });
+//     }
+
+//     // Update the material with all required fields
+//     rawMaterial.requestedQuantity -= quantity;
+//     rawMaterial.status = "Allocated";
+//     rawMaterial.supplyStatus = "Pending Acceptance";
+//     rawMaterial.requestedBy = productionManager._id; // Set the Production Manager ID
+
+//     // Save the changes
+//     const updatedMaterial = await rawMaterial.save();
+
+//     res.json({
+//       message: "Material allocated successfully",
+//       allocation: {
+//         material: updatedMaterial.material,
+//         allocatedQuantity: quantity,
+//         remainingQuantity: updatedMaterial.requestedQuantity,
+//         status: updatedMaterial.status,
+//         supplyStatus: updatedMaterial.supplyStatus,
+//         allocatedTo: {
+//           id: productionManager._id,
+//           name: `${productionManager.firstName} ${productionManager.lastName}`,
+//           role: productionManager.role,
+//         },
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Error during allocation:", err);
+//     res.status(500).json({ error: err.message });
+//   }
+// });
 router.post("/allocate", async (req, res) => {
   const { materialId, quantity } = req.body;
 
   try {
-    // First find a Production Manager
+    // Find the Production Manager
     const productionManager = await Employee.findOne({
       role: "Production manager",
     });
@@ -521,7 +585,6 @@ router.post("/allocate", async (req, res) => {
 
     // Find the material
     const rawMaterial = await Requested.findById(materialId);
-
     if (!rawMaterial) {
       return res.status(404).json({ message: "Material not found" });
     }
@@ -533,6 +596,7 @@ router.post("/allocate", async (req, res) => {
         .json({ message: "Please provide a valid quantity" });
     }
 
+    // Check if there's enough stock
     if (rawMaterial.requestedQuantity < quantity) {
       return res.status(400).json({
         message: "Not enough stock available",
@@ -541,7 +605,7 @@ router.post("/allocate", async (req, res) => {
       });
     }
 
-    // Update the material with all required fields
+    // Update the material
     rawMaterial.requestedQuantity -= quantity;
     rawMaterial.status = "Allocated";
     rawMaterial.supplyStatus = "Pending Acceptance";
@@ -570,7 +634,6 @@ router.post("/allocate", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 // Fetch Raw Materials Allocated to the Production Manager
 router.get("/allocated-materials", async (req, res) => {
   try {
@@ -620,6 +683,27 @@ router.put("/update-stock/:id", async (req, res) => {
 
     res.json({ message: "Stock updated successfully", material });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+//  Left stock after allocation
+router.get("/stock", async (req, res) => {
+  try {
+    // Fetch all raw materials from stock
+    const stockItems = await RawMaterial.find({}).sort({ createdAt: -1 }); // Sort by newest first
+
+    // If no items found
+    if (!stockItems || stockItems.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No raw materials found in stock" });
+    }
+
+    // Return the stock items
+    res.status(200).json(stockItems);
+  } catch (err) {
+    console.error("Error fetching stock:", err);
     res.status(500).json({ error: err.message });
   }
 });
