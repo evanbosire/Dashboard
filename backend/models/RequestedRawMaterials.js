@@ -25,6 +25,7 @@ const requestedRawMaterialsSchema = new mongoose.Schema({
       "Accepted",
       "Supply Rejected",
       "Allocated",
+      "Partially Allocated",
     ],
     default: "Requested",
   },
@@ -73,6 +74,12 @@ const requestedRawMaterialsSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Employee", // This should reference the Employee model
     required: true, // This links the request to an employee (e.g., a Production Manager)
+  },
+  allocatedBy: {
+    // Add this new field
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Employee",
+    required: false,
   },
 });
 
