@@ -381,37 +381,7 @@ router.get("/download-receipt/:id", async (req, res) => {
     }
   }
 });
-// //  Inventory Manager Requests Products to be Manufactured
-// router.post("/request-manufacturing", async (req, res) => {
-//   try {
-//     const { material, requestedQuantity, description } = req.body;
 
-//     if (!material || !requestedQuantity || !description) {
-//       return res
-//         .status(400)
-//         .json({ error: "Material, quantity, and description are required" });
-//     }
-
-//     const newRequest = new Requested({
-//       material,
-//       requestedQuantity,
-//       description,
-//       status: "Requested",
-//       supplier: "Internal",
-//       deliveryDate: new Date(),
-//     });
-
-//     await newRequest.save();
-
-//     res.status(201).json({
-//       message: "Manufacturing request sent successfully",
-//       request: newRequest,
-//     });
-//   } catch (err) {
-//     console.error("Error saving manufacturing request:", err);
-//     res.status(500).json({ error: "Internal Server Error" });
-//   }
-// });
 // Inventory Manager Requests Products to be Manufactured
 router.post("/request-manufacturing", async (req, res) => {
   try {
@@ -634,22 +604,25 @@ router.post("/allocate", async (req, res) => {
 // Fetch Raw Materials Allocated to the Production Manager
 router.get("/allocated-materials", async (req, res) => {
   try {
-    // Fetch materials that have been allocated (status changed or quantity modified)
+    // Fetch materials that have the status of either "Allocated" or "Partially Allocated"
     const allocatedMaterials = await Requested.find({
-      status: "Allocated", // Assuming you update the status when allocating
+      status: { $in: ["Allocated", "Partially Allocated"] }, // Match status as "Allocated" or "Partially Allocated"
     })
       .populate({
         path: "requestedBy",
         select: "role firstName lastName", // Select relevant user details
       })
       .lean(); // Convert Mongoose docs to plain objects
+
     if (allocatedMaterials.length === 0) {
       return res.status(404).json({
-        message: "No allocated raw materials found",
+        message: "No raw materials found with the given criteria",
       });
     }
+
     res.status(200).json({
-      message: "Allocated raw materials fetched successfully",
+      message:
+        "Allocated and partially allocated raw materials fetched successfully",
       allocatedMaterials,
     });
   } catch (err) {
