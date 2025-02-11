@@ -381,17 +381,53 @@ router.get("/download-receipt/:id", async (req, res) => {
     }
   }
 });
-//  Inventory Manager Requests Products to be Manufactured
+// //  Inventory Manager Requests Products to be Manufactured
+// router.post("/request-manufacturing", async (req, res) => {
+//   try {
+//     const { material, requestedQuantity, description } = req.body;
+
+//     if (!material || !requestedQuantity || !description) {
+//       return res
+//         .status(400)
+//         .json({ error: "Material, quantity, and description are required" });
+//     }
+
+//     const newRequest = new Requested({
+//       material,
+//       requestedQuantity,
+//       description,
+//       status: "Requested",
+//       supplier: "Internal",
+//       deliveryDate: new Date(),
+//     });
+
+//     await newRequest.save();
+
+//     res.status(201).json({
+//       message: "Manufacturing request sent successfully",
+//       request: newRequest,
+//     });
+//   } catch (err) {
+//     console.error("Error saving manufacturing request:", err);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// });
+// Inventory Manager Requests Products to be Manufactured
 router.post("/request-manufacturing", async (req, res) => {
   try {
     const { material, requestedQuantity, description } = req.body;
 
+    // Check if the required fields are present
     if (!material || !requestedQuantity || !description) {
       return res
         .status(400)
         .json({ error: "Material, quantity, and description are required" });
     }
 
+    // Hardcode the Inventory Manager's ID (replace with actual ID)
+    const inventoryManagerId = "678e837e3e192d6f4257daaa"; // Example Inventory Manager ID
+
+    // Create the new request and automatically add the Inventory Manager's ID
     const newRequest = new Requested({
       material,
       requestedQuantity,
@@ -399,10 +435,13 @@ router.post("/request-manufacturing", async (req, res) => {
       status: "Requested",
       supplier: "Internal",
       deliveryDate: new Date(),
+      requestedBy: inventoryManagerId, // Automatically set requestedBy to the Inventory Manager's ID
     });
 
+    // Save the new request to the database
     await newRequest.save();
 
+    // Respond with a success message
     res.status(201).json({
       message: "Manufacturing request sent successfully",
       request: newRequest,
@@ -509,6 +548,7 @@ router.get("/view-raw-material-requests", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 // Allocate Raw Materials to Production Manager
 router.post("/allocate", async (req, res) => {
   const { materialId, quantity } = req.body;
