@@ -531,6 +531,7 @@ router.post("/allocate", async (req, res) => {
         message: "No Production Manager found in the system",
       });
     }
+
     const rawMaterial = await Requested.findById(materialId).populate({
       path: "requestedBy",
       select: "role firstName lastName",
@@ -545,6 +546,7 @@ router.post("/allocate", async (req, res) => {
         .status(400)
         .json({ message: "Please provide a valid quantity" });
     }
+
     if (rawMaterial.requestedQuantity < quantity) {
       return res.status(400).json({
         message: "Not enough stock available",
@@ -552,19 +554,17 @@ router.post("/allocate", async (req, res) => {
         available: rawMaterial.requestedQuantity,
       });
     }
+
     const remainingQuantity = rawMaterial.requestedQuantity - quantity;
     const newStatus =
       remainingQuantity === 0 ? "Allocated" : "Partially Allocated";
-
-    console.log(
-      `Updating material ID ${materialId} - Remaining Quantity: ${remainingQuantity}, New Status: ${newStatus}`
-    );
 
     const updatedMaterial = await Requested.findByIdAndUpdate(
       materialId,
       {
         $set: {
           requestedQuantity: remainingQuantity,
+          allocatedQuantity: (rawMaterial.allocatedQuantity || 0) + quantity, // Track allocated quantity
           status: newStatus,
           supplyStatus: "Pending Acceptance",
           allocatedBy: productionManager._id,
@@ -575,12 +575,12 @@ router.post("/allocate", async (req, res) => {
       path: "requestedBy",
       select: "role firstName lastName",
     });
-    console.log("Updated Material:", updatedMaterial);
+
     res.json({
       message: "Material allocated successfully",
       allocation: {
         material: updatedMaterial.material,
-        allocatedQuantity: quantity,
+        allocatedQuantity: updatedMaterial.allocatedQuantity,
         remainingQuantity: updatedMaterial.requestedQuantity,
         status: updatedMaterial.status,
         supplyStatus: updatedMaterial.supplyStatus,
@@ -604,15 +604,15 @@ router.post("/allocate", async (req, res) => {
 // Fetch Raw Materials Allocated to the Production Manager
 router.get("/allocated-materials", async (req, res) => {
   try {
-    // Fetch materials that have the status of either "Allocated" or "Partially Allocated"
     const allocatedMaterials = await Requested.find({
-      status: { $in: ["Allocated", "Partially Allocated"] }, // Match status as "Allocated" or "Partially Allocated"
+      status: { $in: ["Allocated", "Partially Allocated"] },
+      allocatedQuantity: { $gt: 0 }, // Only fetch materials that have been allocated
     })
       .populate({
         path: "requestedBy",
-        select: "role firstName lastName", // Select relevant user details
+        select: "role firstName lastName",
       })
-      .lean(); // Convert Mongoose docs to plain objects
+      .lean();
 
     if (allocatedMaterials.length === 0) {
       return res.status(404).json({
@@ -620,17 +620,23 @@ router.get("/allocated-materials", async (req, res) => {
       });
     }
 
+    // Transform the response to include allocated quantity
+    const transformedMaterials = allocatedMaterials.map((material) => ({
+      ...material,
+      quantity: material.allocatedQuantity, // Include allocated quantity in response
+      remainingQuantity: material.requestedQuantity, // Keep remaining quantity if needed
+    }));
+
     res.status(200).json({
       message:
         "Allocated and partially allocated raw materials fetched successfully",
-      allocatedMaterials,
+      allocatedMaterials: transformedMaterials,
     });
   } catch (err) {
     console.error("Error fetching allocated materials:", err);
     res.status(500).json({ error: err.message });
   }
 });
-
 // Update Stock When Raw Materials Are Received
 router.put("/update-stock/:id", async (req, res) => {
   try {

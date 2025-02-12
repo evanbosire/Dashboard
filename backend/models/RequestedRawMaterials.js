@@ -81,6 +81,10 @@ const requestedRawMaterialsSchema = new mongoose.Schema({
     ref: "Employee",
     required: false,
   },
+  allocatedQuantity: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const RequestedRawMaterials = mongoose.model(
