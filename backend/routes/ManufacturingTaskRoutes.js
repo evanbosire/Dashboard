@@ -209,7 +209,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// POST: Add a new manufacturing task
+// POST: Add a new manufacturing task by manufacturing team
 router.post("/products", upload.single("image"), async (req, res) => {
   try {
     const { name, quantity } = req.body;
@@ -237,6 +237,85 @@ router.get("/products-manufactured", async (req, res) => {
     res.status(200).json(tasks);
   } catch (error) {
     res.status(500).json({ message: "Error fetching products", error });
+  }
+});
+// ✅ PUT: Auto-allocate a product to an Inventory Manager (with stock validation)
+router.put("/products/:id/allocate", async (req, res) => {
+  try {
+    const { quantityToAllocate } = req.body; // Get quantity from request body
+    const productId = req.params.id;
+
+    // 🔍 Find an employee with the role of "Inventory Manager"
+    const inventoryManager = await Employee.findOne({
+      role: "Inventory manager",
+    });
+
+    if (!inventoryManager) {
+      return res.status(404).json({ message: "No Inventory Manager found" });
+    }
+
+    // 🔍 Find the product
+    const product = await ProductTask.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // 🚫 Prevent zero or negative allocation
+    if (!quantityToAllocate || quantityToAllocate <= 0) {
+      return res
+        .status(400)
+        .json({ message: "Allocation quantity must be greater than zero" });
+    }
+
+    // 🚫 Prevent over-allocation (more than available stock)
+    if (quantityToAllocate > product.quantity) {
+      return res
+        .status(400)
+        .json({ message: "Not enough stock available for allocation" });
+    }
+
+    // ✅ Reduce available stock and assign product to Inventory Manager
+    product.quantity -= quantityToAllocate;
+    product.allocatedTo = inventoryManager._id;
+    await product.save();
+
+    res.status(200).json({
+      message: `Allocated ${quantityToAllocate} units of ${product.name} to Inventory Manager successfully`,
+      product,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error allocating product", error });
+  }
+});
+// ✅ GET: Fetch all allocated products for an Inventory Manager (without manual ID)
+router.get("/products/allocated", async (req, res) => {
+  try {
+    // 🔍 Find the Inventory Manager automatically
+    const inventoryManager = await Employee.findOne({
+      role: "Inventory manager",
+    });
+
+    if (!inventoryManager) {
+      return res.status(404).json({ message: "No Inventory Manager found" });
+    }
+
+    // 🔍 Find all products allocated to this Inventory Manager
+    const allocatedProducts = await ProductTask.find({
+      allocatedTo: inventoryManager._id,
+    }).select("name quantity image allocatedAt");
+
+    if (!allocatedProducts.length) {
+      return res.status(404).json({ message: "No products allocated yet" });
+    }
+
+    res.status(200).json({
+      message: "Allocated products retrieved successfully",
+      allocatedProducts,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching allocated products", error });
   }
 });
 
