@@ -3,8 +3,8 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const Requested = require("../models/RequestedRawMaterials");
 const Employee = require("../models/Employee");
+const AllocatedMaterials = require("../models/AllocatedMaterials ");
 const PDFDocument = require("pdfkit");
-const RequestedRawMaterials = require("../models/RequestedRawMaterials");
 
 // POST route to handle raw material requests by the inventory manager
 router.post("/request-material", async (req, res) => {
@@ -668,4 +668,57 @@ router.get("/stock", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+// Allocate materials to manufacturing
+router.post(
+  "/allocate-materials-manufacturing/:materialId",
+  async (req, res) => {
+    const { materialId } = req.params;
+    const { quantity } = req.body;
+
+    try {
+      if (!quantity || quantity <= 0) {
+        return res
+          .status(400)
+          .json({ message: "Quantity must be greater than zero." });
+      }
+
+      // Fetch the allocated raw material
+      const rawMaterial = await Requested.findById(materialId);
+      if (!rawMaterial) {
+        return res.status(404).json({ message: "Material not found." });
+      }
+
+      if (rawMaterial.allocatedQuantity < quantity) {
+        return res
+          .status(400)
+          .json({ message: "Insufficient allocated materials." });
+      }
+
+      // Deduct allocated quantity
+      rawMaterial.allocatedQuantity -= quantity;
+      if (rawMaterial.allocatedQuantity === 0) {
+        rawMaterial.status = "Fully Allocated";
+      }
+
+      await rawMaterial.save();
+
+      // Store allocated materials separately
+      const allocatedMaterial = new AllocatedMaterials({
+        materialId,
+        allocatedQuantity: quantity,
+      });
+
+      await allocatedMaterial.save();
+
+      res.status(200).json({
+        message: "Materials successfully allocated to manufacturing",
+        allocatedMaterial,
+      });
+    } catch (err) {
+      console.error("Error allocating materials:", err);
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
 module.exports = router;
