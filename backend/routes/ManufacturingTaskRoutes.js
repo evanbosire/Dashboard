@@ -129,6 +129,24 @@ router.put("/complete-task/:taskId", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// get completed tasks and display the number in the manufacturing dashboard
+router.get("/completed-tasks", async (req, res) => {
+  try {
+    // Fetch tasks that have a status of "Completed"
+    const completedTasks = await ManufacturingTask.find({
+      status: "Completed",
+    });
+
+    res.status(200).json({
+      message: "Completed tasks retrieved successfully",
+      tasks: completedTasks,
+    });
+  } catch (err) {
+    console.error("Error fetching completed tasks:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Confirm or reject manufactured products (Production Manager)
 router.put("/confirm-task/:taskId", async (req, res) => {
   const { taskId } = req.params;
