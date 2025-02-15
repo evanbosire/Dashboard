@@ -35,7 +35,7 @@ app.use(bodyParser.json());
 
 // Basic root route
 app.get("/", (req, res) => {
-  res.send("Welcome to the API!"); // Change this to your preferred response
+  res.send("Welcome to the API! EvansBosire.Dev"); // Change this to your preferred response
 });
 
 // Use routes
