@@ -3,6 +3,9 @@ const router = express.Router();
 const ManufacturingTask = require("../models/ManufacturingTask");
 const Employee = require("../models/Employee");
 const AllocatedMaterials = require("../models/AllocatedMaterials ");
+const multer = require("multer");
+const path = require("path");
+const ProductTask = require("../models/ProductTask");
 
 // Assign a task to the manufacturing team
 router.post("/assign-task", async (req, res) => {
@@ -180,28 +183,61 @@ router.put("/confirm-task/:taskId", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-// Store confirmed products in the store
-router.post("/store-products/:taskId", async (req, res) => {
-  const { taskId } = req.params;
-
+// Fetch confirmed manufacturing tasks
+router.get("/confirmed-tasks", async (req, res) => {
   try {
-    const task = await ManufacturingTask.findById(taskId);
-    if (!task || task.status !== "Confirmed") {
-      return res
-        .status(400)
-        .json({ message: "Task not found or not confirmed" });
-    }
-
-    // Logic to store products in the store (e.g., update inventory)
-    // This depends on your inventory management system
+    // Fetch tasks with status "Confirmed"
+    const confirmedTasks = await ManufacturingTask.find({
+      status: "Confirmed",
+    }).populate("allocatedMaterials.materialId"); // Populate material details if needed
 
     res.status(200).json({
-      message: "Products stored successfully",
-      task,
+      message: "Confirmed tasks retrieved successfully",
+      tasks: confirmedTasks,
     });
   } catch (err) {
-    console.error("Error storing products:", err);
+    console.error("Error fetching confirmed tasks:", err);
     res.status(500).json({ error: err.message });
   }
 });
+// Multer Storage Setup
+const storage = multer.diskStorage({
+  destination: "./uploads/",
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+const upload = multer({ storage });
+
+// POST: Add a new manufacturing task
+router.post("/products", upload.single("image"), async (req, res) => {
+  try {
+    const { name, quantity } = req.body;
+    const image = req.file ? req.file.filename : null;
+
+    if (!name || !quantity || !image) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const newTask = new ProductTask({ name, quantity, image });
+    await newTask.save();
+
+    res
+      .status(201)
+      .json({ message: "Product added successfully", task: newTask });
+  } catch (error) {
+    res.status(500).json({ message: "Error adding product", error });
+  }
+});
+
+// GET: Fetch all manufacturing tasks
+router.get("/products-manufactured", async (req, res) => {
+  try {
+    const tasks = await ProductTask.find();
+    res.status(200).json(tasks);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching products", error });
+  }
+});
+
 module.exports = router;

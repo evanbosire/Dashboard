@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 require("dotenv").config(); // Load environment variables from .env file
+const path = require("path");
 
 const customerRoutes = require("./routes/customerRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
@@ -55,6 +56,9 @@ app.use("/api/admin", adminRoutes); // Admin routes for login and registration
 app.use("/api/inventory", requestedRawMaterialsRoutes);
 // Use the manufacturing route
 app.use("/api/manufacturing", manufacturingRoutes);
+
+// Serve Uploaded Images
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
