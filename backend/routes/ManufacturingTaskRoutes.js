@@ -390,5 +390,30 @@ router.get("/products/posted/count", async (req, res) => {
     });
   }
 });
+// API to get posted products and display them to customer side homepage.
+router.get("/products/posted", async (req, res) => {
+  try {
+    const products = await ProductTask.find(
+      { status: "posted" }, // ✅ Fetch only posted products
+      {
+        name: 1, // Product name
+        description: 1, // Product description
+        price: 1, // Product price
+        quantityAllocated: 1, // Available stock
+        image: 1, // ✅ Include product image
+        inStock: 1, // ✅ Include stock status
+        _id: 0, // Exclude the ID field (optional)
+      }
+    ).sort({ createdAt: -1 }); // Sort by newest first
+
+    res.status(200).json({ products });
+  } catch (error) {
+    console.error("Error fetching posted products:", error);
+    res.status(500).json({
+      message: "Error fetching posted products",
+      error: error.message || error,
+    });
+  }
+});
 
 module.exports = router;
