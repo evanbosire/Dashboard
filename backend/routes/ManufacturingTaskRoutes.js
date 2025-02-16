@@ -324,19 +324,8 @@ router.get("/products/allocated", async (req, res) => {
     });
   }
 });
-// ✅ GET: Fetch the count of posted products in the inventory dashboard
-router.get("/products/posted/count", async (req, res) => {
-  try {
-    const count = await ProductTask.countDocuments({ posted: true });
-    res.status(200).json({ count });
-  } catch (error) {
-    console.error("Error fetching posted products count:", error);
-    res.status(500).json({
-      message: "Error fetching posted products count",
-      error: error.message || error,
-    });
-  }
-});
+
+//  update product details by adding price, description and quantity to post
 router.put("/products/:id/details", async (req, res) => {
   try {
     const { id } = req.params;
@@ -384,6 +373,19 @@ router.put("/products/:id/details", async (req, res) => {
     console.error("Error updating product details:", error);
     res.status(500).json({
       message: "Error updating product details",
+      error: error.message || error,
+    });
+  }
+});
+// Api to get the count of the posted products to customer.
+router.get("/products/posted/count", async (req, res) => {
+  try {
+    const count = await ProductTask.countDocuments({ status: "posted" }); // ✅ Filter by status
+    res.status(200).json({ count });
+  } catch (error) {
+    console.error("Error fetching posted products count:", error);
+    res.status(500).json({
+      message: "Error fetching posted products count",
       error: error.message || error,
     });
   }
