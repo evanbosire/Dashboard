@@ -8,6 +8,7 @@ const ProductTaskSchema = new mongoose.Schema(
     // ✅ Add these fields to track allocation
     allocatedTo: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
     allocatedAt: { type: Date },
+    quantityAllocated: { type: Number, default: 0 },
   },
 
   { timestamps: true }

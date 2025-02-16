@@ -242,10 +242,10 @@ router.get("/products-manufactured", async (req, res) => {
 // ✅ PUT: Auto-allocate a product to an Inventory Manager (with stock validation)
 router.put("/products/:id/allocate", async (req, res) => {
   try {
-    const { quantityToAllocate } = req.body; // Get quantity from request body
+    const { quantityToAllocate } = req.body; // Get allocation quantity from request
     const productId = req.params.id;
 
-    // 🔍 Find an employee with the role of "Inventory Manager"
+    // 🔍 Find the Inventory Manager
     const inventoryManager = await Employee.findOne({
       role: "Inventory manager",
     });
@@ -274,9 +274,12 @@ router.put("/products/:id/allocate", async (req, res) => {
         .json({ message: "Not enough stock available for allocation" });
     }
 
-    // ✅ Reduce available stock and assign product to Inventory Manager
+    // ✅ Reduce available stock and store allocated quantity
     product.quantity -= quantityToAllocate;
     product.allocatedTo = inventoryManager._id;
+    product.allocatedAt = new Date();
+    product.quantityAllocated += quantityToAllocate; // ✅ Store allocated quantity
+
     await product.save();
 
     res.status(200).json({
@@ -287,10 +290,11 @@ router.put("/products/:id/allocate", async (req, res) => {
     res.status(500).json({ message: "Error allocating product", error });
   }
 });
-// ✅ GET: Fetch all allocated products for an Inventory Manager (without manual ID)
+
+// // ✅ GET: Fetch all allocated products for an Inventory Manager (without manual ID)
 router.get("/products/allocated", async (req, res) => {
   try {
-    // 🔍 Find the Inventory Manager automatically
+    // 🔍 Find the Inventory Manager
     const inventoryManager = await Employee.findOne({
       role: "Inventory manager",
     });
@@ -299,10 +303,10 @@ router.get("/products/allocated", async (req, res) => {
       return res.status(404).json({ message: "No Inventory Manager found" });
     }
 
-    // 🔍 Find all products allocated to this Inventory Manager
+    // 🔍 Find all products allocated to the Inventory Manager
     const allocatedProducts = await ProductTask.find({
       allocatedTo: inventoryManager._id,
-    }).select("name quantity image allocatedAt");
+    }).select("name quantityAllocated image allocatedAt");
 
     if (!allocatedProducts.length) {
       return res.status(404).json({ message: "No products allocated yet" });
@@ -313,9 +317,11 @@ router.get("/products/allocated", async (req, res) => {
       allocatedProducts,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching allocated products", error });
+    console.error("Error fetching allocated products:", error);
+    res.status(500).json({
+      message: "Error fetching allocated products",
+      error: error.message || error,
+    });
   }
 });
 
