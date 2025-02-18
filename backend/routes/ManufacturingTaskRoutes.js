@@ -4,7 +4,10 @@ const ManufacturingTask = require("../models/ManufacturingTask");
 const Employee = require("../models/Employee");
 const AllocatedMaterials = require("../models/AllocatedMaterials ");
 const multer = require("multer");
+const { v2: cloudinary } = require("cloudinary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const path = require("path");
+
 const ProductTask = require("../models/ProductTask");
 
 // Assign a task to the manufacturing team
@@ -201,32 +204,65 @@ router.get("/confirmed-tasks", async (req, res) => {
   }
 });
 // Multer Storage Setup
-const storage = multer.diskStorage({
-  destination: "./uploads/",
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
+// const storage = multer.diskStorage({
+//   destination: "./uploads/",
+//   filename: (req, file, cb) => {
+//     cb(null, Date.now() + path.extname(file.originalname));
+//   },
+// });
+// const upload = multer({ storage });
+// Set storage for uploaded files
+// Set up Cloudinary configuration
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: "dos1og1td",
+  api_key: "226168678238927",
+  api_secret: "DQsocnvLRHx3TOJH8N4hIsLBezw",
+});
+
+// Multer storage for Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "product-images",
+    allowed_formats: ["jpg", "jpeg", "png"],
   },
 });
-const upload = multer({ storage });
 
-// POST: Add a new manufacturing task by manufacturing team
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max size
+});
+
+// POST: Add a new product
 router.post("/products", upload.single("image"), async (req, res) => {
   try {
-    const { name, quantity } = req.body;
-    const image = req.file ? req.file.filename : null;
+    const name = req.body.name?.trim();
+    const quantity = req.body.quantity?.trim();
+    const image = req.file ? req.file.path : null;
 
     if (!name || !quantity || !image) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res
+        .status(400)
+        .json({ message: "Name, quantity, and image are required" });
     }
 
-    const newTask = new ProductTask({ name, quantity, image });
+    // ✅ Only save name, quantity, and image for now
+    const newTask = new ProductTask({
+      name,
+      quantity,
+      image,
+    });
+
     await newTask.save();
 
     res
       .status(201)
-      .json({ message: "Product added successfully", task: newTask });
+      .json({ message: "Product added successfully", product: newTask });
   } catch (error) {
-    res.status(500).json({ message: "Error adding product", error });
+    res
+      .status(500)
+      .json({ message: "Error adding product", error: error.message });
   }
 });
 

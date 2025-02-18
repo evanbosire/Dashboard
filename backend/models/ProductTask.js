@@ -1,39 +1,21 @@
-// const mongoose = require("mongoose");
-
-// const ProductTaskSchema = new mongoose.Schema(
-//   {
-//     name: { type: String, required: true },
-//     quantity: { type: Number, required: true },
-//     image: { type: String, required: true },
-//     // ✅ Add these fields to track allocation
-//     allocatedTo: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
-//     allocatedAt: { type: Date },
-//     quantityAllocated: { type: Number, default: 0 },
-//   },
-
-//   { timestamps: true }
-// );
-
-// module.exports = mongoose.model("ProductTask", ProductTaskSchema);
-
 const mongoose = require("mongoose");
 
 const ProductTaskSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     quantity: { type: Number, required: true },
-    image: { type: String, required: true }, // ✅ Store product image
-    description: { type: String, required: true }, // ✅ Store product description
-    price: { type: Number, required: true }, // ✅ Store product price
-    inStock: { type: Boolean, default: true }, // ✅ Track if the product is in stock
+    image: { type: String, required: true },
 
-    // ✅ Track quantity allocation and posting
+    // ❌ Change `required: true` to `required: false`
+    description: { type: String, required: false }, // ✅ Now optional
+    price: { type: Number, required: false }, // ✅ Now optional
+
+    inStock: { type: Boolean, default: true },
     allocatedTo: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
     allocatedAt: { type: Date },
     quantityAllocated: { type: Number, default: 0 },
-    quantityPosted: { type: Number, default: 0 }, // ✅ Track posted quantity
+    quantityPosted: { type: Number, default: 0 },
 
-    // ✅ Product lifecycle tracking
     status: {
       type: String,
       enum: [
@@ -47,7 +29,6 @@ const ProductTaskSchema = new mongoose.Schema(
       default: "posted",
     },
 
-    // ✅ Order tracking
     orderDetails: {
       customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer" },
       orderId: { type: String },
@@ -56,13 +37,11 @@ const ProductTaskSchema = new mongoose.Schema(
       deliveryLocation: { type: String },
     },
 
-    // ✅ Dispatch tracking
     dispatchDetails: {
       dispatcherId: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
       dispatchedAt: { type: Date },
     },
 
-    // ✅ Delivery and feedback
     deliveryDetails: {
       driverId: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
       deliveredAt: { type: Date },
