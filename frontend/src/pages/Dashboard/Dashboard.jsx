@@ -236,10 +236,11 @@ function Dashboard() {
           "https://backend-n0lb.onrender.com/api/customers/counts/rejected"
         );
 
-        setPending(pendingResponse.data.count);
-        setActive(activeResponse.data.count);
-        setSuspended(suspendedResponse.data.count);
-        setRejected(rejectedResponse.data.count);
+        // Set state based on the API response structure
+        setPending(pendingResponse.data.pending); // Access the "pending" property
+        setActive(activeResponse.data.active); // Access the "active" property
+        setSuspended(suspendedResponse.data.suspended); // Access the "suspended" property
+        setRejected(rejectedResponse.data.rejected); // Access the "rejected" property
       } catch (error) {
         console.error("Error fetching customer counts:", error);
       } finally {

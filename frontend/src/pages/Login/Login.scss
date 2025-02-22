@@ -1,69 +1,240 @@
-/* Login.css */
-
-html,
-body {
-    height: 100%;
-    margin: 0;
-}
-
+/* Login.scss */
 .login-page {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100vh;
-    background-color: #f8f9fa ;
-    /* Optional: set a background color */
+    min-height: 100vh;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #1a1f35 0%, #283593 100%);
+
+    &::before {
+        content: '';
+        position: absolute;
+        width: 150%;
+        height: 150%;
+        background: linear-gradient(45deg,
+                rgba(65, 88, 208, 0.15) 0%,
+                rgba(200, 80, 192, 0.15) 50%,
+                rgba(255, 204, 112, 0.15) 100%);
+        animation: loginRotate 20s linear infinite;
+        z-index: 1;
+    }
+
+    .login-form-container {
+        width: 100%;
+        max-width: 420px;
+        position: relative;
+        z-index: 2;
+        margin: 20px;
+
+        .login-form {
+            width: 100%;
+            backdrop-filter: blur(10px);
+
+            .card {
+                background: rgba(255, 255, 255, 0.95);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 20px;
+                box-shadow:
+                    0 20px 40px rgba(0, 0, 0, 0.2),
+                    0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+                overflow: hidden;
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+                &:hover {
+                    transform: translateY(-5px);
+                    box-shadow:
+                        0 25px 50px rgba(0, 0, 0, 0.3),
+                        0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+                }
+
+                .card-header {
+                    display: flex;
+                    align-items: center;
+                    padding: 25px 20px;
+                    background: linear-gradient(135deg, #2c3e50, #3498db);
+                    position: relative;
+                    overflow: hidden;
+
+                    .navbar-logo {
+                        width: 60px;
+                        height: auto;
+                        margin-right: 20px;
+                        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+                        transition: transform 0.3s ease;
+                        object-fit: contain;
+                        image-rendering: -webkit-optimize-contrast;
+
+                        &:hover {
+                            transform: scale(1.1);
+                        }
+                    }
+
+                    .titles {
+                        color: #fff;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 5px;
+
+                        span {
+                            font-size: 24px;
+                            font-weight: 600;
+                            letter-spacing: 0.5px;
+                            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+                            &:last-child {
+                                font-size: 20px;
+                                opacity: 0.9;
+                            }
+                        }
+                    }
+                }
+
+                .card-body {
+                    padding: 30px;
+                    color: #2c3e50;
+
+                    .form-group {
+                        margin-bottom: 25px;
+
+                        label {
+                            display: block;
+                            margin-bottom: 8px;
+                            font-weight: 500;
+                            color: #2c3e50;
+
+                            &.titles {
+                                color: #2c3e50;
+                                font-size: 15px;
+                            }
+
+                            .errmsg {
+                                color: #e74c3c;
+                                margin-left: 4px;
+                            }
+                        }
+
+                        .form-control {
+                            width: 100%;
+                            padding: 12px 16px;
+                            font-size: 15px;
+                            border: 2px solid rgba(0, 0, 0, 0.1);
+                            border-radius: 12px;
+                            background: rgba(255, 255, 255, 0.9);
+                            transition: all 0.3s ease;
+                            color: #2c3e50;
+
+                            &:focus {
+                                border-color: #3498db;
+                                box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.15);
+                                outline: none;
+                            }
+                        }
+                    }
+                }
+
+                .card-footer {
+                    text-align: center;
+                    padding: 20px;
+                    background: rgba(0, 0, 0, 0.02);
+                    border-top: 1px solid rgba(0, 0, 0, 0.05);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 15px;
+
+                    .btn {
+                        padding: 12px 24px;
+                        font-size: 15px;
+                        font-weight: 600;
+                        color: #fff;
+                        border: none;
+                        border-radius: 12px;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        text-decoration: none;
+                        min-width: 120px;
+                        text-align: center;
+
+                        &:hover {
+                            transform: translateY(-2px);
+                            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+                        }
+
+                        &:active {
+                            transform: translateY(0);
+                        }
+
+                        &.btn-primary {
+                            background: linear-gradient(135deg, #3498db, #2c3e50);
+
+                            &:hover {
+                                background: linear-gradient(135deg, #2c3e50, #3498db);
+                            }
+                        }
+
+                        &.btn-success {
+                            background: linear-gradient(135deg, #2ecc71, #27ae60);
+
+                            &:hover {
+                                background: linear-gradient(135deg, #27ae60, #2ecc71);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
-.login-form-container {
-    width: 100%;
-    max-width: 500px;
-    /* Adjust the max width as needed */
-    margin-top: 50px;
-    /* Add margin-top to center form vertically */
-    background-color: #f8f9fa;
+@keyframes loginRotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
-.login-form {
-    width: 100%;
-    
-}
+/* Responsive Design */
+@media (max-width: 480px) {
+    .login-page {
+        .login-form-container {
+            margin: 10px;
 
-.card {
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+            .card {
+                .card-header {
+                    padding: 20px 15px;
 
-.card-header {
-    display: flex;
-    text-align: center;
-    padding: 15px;
-    border-bottom: 1px solid #ddd;
-}
+                    .navbar-logo {
+                        width: 45px;
+                    }
 
-.card-body {
-    padding: 15px;
-}
+                    .titles span {
+                        font-size: 20px;
 
-.card-footer {
-    text-align: center;
-    padding: 15px;
-    border-top: 1px solid #ddd;
-}
+                        &:last-child {
+                            font-size: 16px;
+                        }
+                    }
+                }
 
-.titles {
-    color: #fff !important;
-    display: flex;
-    flex-direction: column;
-}
-.navbar-logo {
-    width: 10px;
-    /* Adjust the width as needed */
-    height: auto;
-    /* Maintain aspect ratio */
-    margin-right: 10px;
-    /* Add some spacing between the logo and text */
-}
+                .card-body {
+                    padding: 20px;
+                }
 
+                .card-footer {
+                    flex-direction: column;
+                    gap: 10px;
+
+                    .btn {
+                        width: 100%;
+                    }
+                }
+            }
+        }
+    }
+}
