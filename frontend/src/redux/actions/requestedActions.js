@@ -9,7 +9,7 @@ export const fetchRequestedMaterials = () => async (dispatch) => {
 
   try {
     const response = await axios.get(
-      "https://dashboard-76od.onrender.com/api/requested"
+      "https://backend-n0lb.onrender.com/api/requested"
     );
     dispatch({
       type: FETCH_REQUESTED_MATERIALS,

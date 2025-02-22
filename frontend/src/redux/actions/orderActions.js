@@ -10,7 +10,7 @@ export const fetchOrders = () => async (dispatch) => {
 
   try {
     const response = await axios.get(
-      "https://dashboard-76od.onrender.com/api/orders"
+      "https://backend-n0lb.onrender.com/api/orders"
     );
     dispatch({
       type: FETCH_ORDERS,

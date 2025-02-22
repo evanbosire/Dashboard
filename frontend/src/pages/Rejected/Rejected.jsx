@@ -18,7 +18,7 @@ function Rejected() {
       try {
         // Ensure the API URL is correct for production
         const response = await axios.get(
-          "https://dashboard-76od.onrender.com/api/customers/rejected"
+          "https://backend-n0lb.onrender.com/api/customers/rejected"
         );
         setCustomers(response.data);
       } catch (error) {

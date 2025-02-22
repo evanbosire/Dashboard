@@ -6,7 +6,7 @@ export const fetchPayments = createAsyncThunk(
   async () => {
     try {
       const response = await axios.get(
-        "https://dashboard-76od.onrender.com/api/payments"
+        "https://backend-n0lb.onrender.com/api/payments"
       ); // Correct path
       return response.data;
     } catch (error) {

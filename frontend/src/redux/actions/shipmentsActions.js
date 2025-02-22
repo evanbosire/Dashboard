@@ -21,7 +21,7 @@ export const fetchShipments = () => async (dispatch) => {
 
   try {
     const response = await axios.get(
-      "https://dashboard-76od.onrender.com/api/shipments"
+      "https://backend-n0lb.onrender.com/api/shipments"
     ); // Adjust endpoint as necessary
     dispatch({
       type: FETCH_SHIPMENTS,

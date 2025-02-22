@@ -44,7 +44,7 @@ function Dashboard() {
     dispatch(fetchProductionData()); // Fetch production data from API
 
     const eventSource = new EventSource(
-      "https://dashboard-76od.onrender.com/events"
+      "https://backend-n0lb.onrender.com/events"
     );
     eventSource.onmessage = (event) => {
       const message = JSON.parse(event.data);

@@ -9,7 +9,7 @@ export const fetchProductionData = () => async (dispatch) => {
 
   try {
     const response = await axios.get(
-      "https://dashboard-76od.onrender.com/api/productions"
+      "https://backend-n0lb.onrender.com/api/productions"
     );
     dispatch({
       type: FETCH_PRODUCTION_DATA,

@@ -12,7 +12,7 @@ export const fetchEmployees = (status) => async (dispatch) => {
 
   try {
     const response = await axios.get(
-      `https://dashboard-76od.onrender.com/api/employees/${status}`
+      `https://backend-n0lb.onrender.com/api/employees/${status}`
     );
     dispatch({
       type: FETCH_EMPLOYEES,
@@ -36,7 +36,7 @@ export const inactivateEmployee = (id) => async (dispatch) => {
 
     // Make the PATCH request to inactivate employee
     await axios.patch(
-      `https://dashboard-76od.onrender.com/api/employees/inactivate/${id}`
+      `https://backend-n0lb.onrender.com/api/employees/inactivate/${id}`
     );
 
     // Dispatch the action to update the employee state in Redux
@@ -59,7 +59,7 @@ export const activateEmployee = (id) => async (dispatch) => {
   try {
     if (!id) throw new Error("Employee ID is required.");
     await axios.patch(
-      `https://dashboard-76od.onrender.com/api/employees/activate/${id}`
+      `https://backend-n0lb.onrender.com/api/employees/activate/${id}`
     );
     dispatch({ type: ACTIVATE_EMPLOYEE, payload: id });
     dispatch(fetchEmployees("active"));

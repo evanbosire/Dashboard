@@ -9,7 +9,7 @@ export const fetchMessagesData = () => async (dispatch) => {
 
   try {
     const response = await axios.get(
-      "https://dashboard-76od.onrender.com/api/messages"
+      "https://backend-n0lb.onrender.com/api/messages"
     );
     dispatch({
       type: FETCH_MESSAGES_DATA,

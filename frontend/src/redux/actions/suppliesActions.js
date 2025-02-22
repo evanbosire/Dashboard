@@ -26,7 +26,7 @@ export const fetchSupplies = () => async (dispatch) => {
 
   try {
     const response = await axios.get(
-      "https://dashboard-76od.onrender.com/api/supplies"
+      "https://backend-n0lb.onrender.com/api/supplies"
     );
     dispatch(fetchSuppliesSuccess(response.data)); // Dispatch success action with data
   } catch (error) {

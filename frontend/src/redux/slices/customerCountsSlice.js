@@ -13,7 +13,7 @@ const initialState = {
 // Helper function to fetch count from a specific endpoint
 const fetchCountFromEndpoint = async (endpoint) => {
   const response = await fetch(
-    `https://dashboard-76od.onrender.com/api/customers/counts/${endpoint}`
+    `https://backend-n0lb.onrender.com/api/customers/counts/${endpoint}`
   );
   if (!response.ok) {
     throw new Error(`Failed to fetch ${endpoint} count`);
