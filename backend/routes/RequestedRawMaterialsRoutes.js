@@ -847,16 +847,49 @@ router.put("/update-stock/:id", async (req, res) => {
   }
 });
 
+// router.get("/stock", async (req, res) => {
+//   try {
+//     const materials = await Requested.find({
+//       status: { $in: ["Partially Allocated", "Accepted"] },
+//     });
+//     res.status(200).json(materials);
+//   } catch (error) {
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// });
 router.get("/stock", async (req, res) => {
   try {
     const materials = await Requested.find({
       status: { $in: ["Partially Allocated", "Accepted"] },
     });
-    res.status(200).json(materials);
+
+    // Group materials with the same 'material' by summing requestedQuantity
+    const groupedMaterials = materials.reduce((acc, item) => {
+      const key = item.material; // Grouping by material name
+
+      if (!acc[key]) {
+        acc[key] = {
+          ...item.toObject(),
+          requestedQuantity: item.requestedQuantity, // Initialize with current quantity
+          cost: item.cost, // Initialize with current cost
+        };
+      } else {
+        acc[key].requestedQuantity += item.requestedQuantity; // Sum requestedQuantity
+        acc[key].cost += item.cost; // Sum total cost
+      }
+
+      return acc;
+    }, {});
+
+    // Convert grouped object back to an array
+    const result = Object.values(groupedMaterials);
+
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 // Allocate materials to manufacturing
 router.post(
   "/allocate-materials-manufacturing/:materialId",
