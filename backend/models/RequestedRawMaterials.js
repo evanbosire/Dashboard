@@ -59,10 +59,13 @@ const requestedRawMaterialsSchema = new mongoose.Schema({
   remarks: {
     type: String,
   },
-  cost: {
-    // ✅ Add this field
+  costPerUnit: {
     type: Number,
-    required: false, // Optional, set `true` if cost is always required
+    required: false, // Cost per unit of the material
+  },
+  cost: {
+    type: Number,
+    required: false, // Total cost will be calculated dynamically
   },
   paymentCode: {
     type: String,
