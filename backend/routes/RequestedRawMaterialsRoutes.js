@@ -190,118 +190,13 @@ router.put("/requested-materials/:id", async (req, res) => {
     });
   }
 });
-// Supply Raw Material by supplier to inventory API Endpoint
-// router.post("/supply-material/:id", async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { cost } = req.body; // Extract cost from the request body
 
-//     // Check if the ID is a valid MongoDB ObjectId
-//     if (!mongoose.Types.ObjectId.isValid(id)) {
-//       return res.status(400).json({ message: "Invalid ID format" });
-//     }
-
-//     // Find and update the requested material by ID
-//     const updatedRequest = await Requested.findByIdAndUpdate(
-//       id,
-//       {
-//         status: "Supplied",
-//         supplyStatus: "Pending Acceptance",
-//         suppliedDate: new Date(),
-//         cost: cost, // Add the cost to the updated request
-//       },
-//       { new: true }
-//     );
-
-//     if (!updatedRequest) {
-//       return res.status(404).json({ message: "Requested material not found" });
-//     }
-
-//     res.status(200).json({
-//       message: "Raw material successfully supplied.",
-//       data: updatedRequest,
-//     });
-//   } catch (error) {
-//     console.error("Error in supply-material API:", error);
-//     res.status(500).json({
-//       message: "Failed to supply material",
-//       error: error.message,
-//     });
-//   }
-// });
-
-// // Supply Raw Material by supplier to inventory API Endpoint
-// router.post("/supply-material/:id", async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { cost, quantity, supplier, deliveryDate, requestedBy } = req.body; // Extract required fields from the request body
-
-//     // Check if the ID is a valid MongoDB ObjectId
-//     if (!mongoose.Types.ObjectId.isValid(id)) {
-//       return res.status(400).json({ message: "Invalid ID format" });
-//     }
-
-//     // Find the requested material by ID
-//     const requestedMaterial = await Requested.findById(id);
-//     if (!requestedMaterial) {
-//       return res.status(404).json({ message: "Requested material not found" });
-//     }
-
-//     // Check if the material already exists in the RequestedRawMaterials collection
-//     const existingMaterial = await Requested.findOne({
-//       material: requestedMaterial.material,
-//       status: "Supplied", // Ensure we only check supplied materials
-//     });
-
-//     if (existingMaterial) {
-//       // If the material exists, increment its quantity
-//       existingMaterial.requestedQuantity += quantity; // Increment the quantity
-//       existingMaterial.cost = cost; // Update the cost
-//       existingMaterial.suppliedDate = new Date(); // Update the supplied date
-//       await existingMaterial.save();
-
-//       res.status(200).json({
-//         message: "Raw material quantity incremented successfully.",
-//         data: existingMaterial,
-//       });
-//     } else {
-//       // If the material does not exist, create a new entry in the RequestedRawMaterials collection
-//       const newMaterial = new Requested({
-//         material: requestedMaterial.material,
-//         description: requestedMaterial.description,
-//         requestedQuantity: quantity, // Use the supplied quantity
-//         status: "Supplied",
-//         supplyStatus: "Pending Acceptance",
-//         suppliedDate: new Date(),
-//         cost: cost, // Add the cost
-//         unit: requestedMaterial.unit, // Use the unit from the requested material
-//         supplier: supplier || requestedMaterial.supplier, // Use the supplier from the request body or the existing material
-//         deliveryDate: deliveryDate || requestedMaterial.deliveryDate, // Use the delivery date from the request body or the existing material
-//         requestedBy: requestedBy || requestedMaterial.requestedBy, // Use the requestedBy from the request body or the existing material
-//       });
-//       await newMaterial.save();
-
-//       res.status(200).json({
-//         message: "New raw material created and supplied successfully.",
-//         data: newMaterial,
-//       });
-//     }
-//   } catch (error) {
-//     console.error("Error in supply-material API:", error);
-//     res.status(500).json({
-//       message: "Failed to supply material",
-//       error: error.message,
-//     });
-//   }
-// });
-
-// // Supply Raw Material by supplier to inventory API Endpoint
 // router.post("/supply-material/:id", async (req, res) => {
 //   try {
 //     const { id } = req.params; // ID of the requested material
-//     const { cost } = req.body; // Only cost is required in the request body
+//     const { cost, costPerUnit } = req.body;
 
-//     // Check if the ID is a valid MongoDB ObjectId
+//     // Validate the ID
 //     if (!mongoose.Types.ObjectId.isValid(id)) {
 //       return res.status(400).json({ message: "Invalid ID format" });
 //     }
@@ -312,16 +207,30 @@ router.put("/requested-materials/:id", async (req, res) => {
 //       return res.status(404).json({ message: "Requested material not found" });
 //     }
 
-//     // Check if the material already exists in the Requested collection
+//     // Validate costPerUnit
+//     if (!costPerUnit || parseFloat(costPerUnit) <= 0) {
+//       return res.status(400).json({ message: "Invalid cost per unit." });
+//     }
+
+//     // Calculate the total cost (already calculated in the frontend, but we can validate it here)
+//     const calculatedTotalCost =
+//       parseFloat(costPerUnit) * requestedMaterial.requestedQuantity;
+
+//     if (calculatedTotalCost !== parseFloat(cost)) {
+//       return res.status(400).json({ message: "Cost calculation mismatch." });
+//     }
+
+//     // Check if the material already exists in the database
 //     const existingMaterial = await Requested.findOne({
 //       material: requestedMaterial.material,
 //       status: "Supplied", // Ensure we only check supplied materials
 //     });
 
 //     if (existingMaterial) {
-//       // If the material exists, increment its quantity
-//       existingMaterial.requestedQuantity += requestedMaterial.requestedQuantity; // Increment the quantity by the requested quantity
-//       existingMaterial.cost = cost; // Update the cost
+//       // If the material exists, increment its quantity and update the cost
+//       existingMaterial.requestedQuantity += requestedMaterial.requestedQuantity;
+//       existingMaterial.cost = calculatedTotalCost; // Update the total cost
+//       existingMaterial.costPerUnit = costPerUnit; // Update the cost per unit
 //       existingMaterial.suppliedDate = new Date(); // Update the supplied date
 //       await existingMaterial.save();
 
@@ -330,20 +239,21 @@ router.put("/requested-materials/:id", async (req, res) => {
 //         data: existingMaterial,
 //       });
 //     } else {
-//       // If the material does not exist, create a new entry in the Requested collection
+//       // If the material does not exist, create a new entry
 //       const newMaterial = new Requested({
 //         material: requestedMaterial.material,
 //         description: requestedMaterial.description,
-//         requestedQuantity: requestedMaterial.requestedQuantity, // Use the requested quantity
+//         requestedQuantity: requestedMaterial.requestedQuantity,
 //         status: "Supplied",
 //         supplyStatus: "Pending Acceptance",
 //         suppliedDate: new Date(),
-//         cost: cost, // Add the cost
-//         unit: requestedMaterial.unit, // Use the unit from the requested material
-//         supplier: requestedMaterial.supplier, // Use the supplier from the requested material
-//         deliveryDate: requestedMaterial.deliveryDate, // Use the delivery date from the requested material
-//         requestedBy: requestedMaterial.requestedBy, // Use the requestedBy from the requested material
-//         dateRequested: requestedMaterial.dateRequested, // Use the dateRequested from the requested material
+//         cost: calculatedTotalCost,
+//         costPerUnit: costPerUnit,
+//         unit: requestedMaterial.unit,
+//         supplier: requestedMaterial.supplier,
+//         deliveryDate: requestedMaterial.deliveryDate,
+//         requestedBy: requestedMaterial.requestedBy,
+//         dateRequested: requestedMaterial.dateRequested,
 //       });
 //       await newMaterial.save();
 
@@ -360,7 +270,6 @@ router.put("/requested-materials/:id", async (req, res) => {
 //     });
 //   }
 // });
-
 router.post("/supply-material/:id", async (req, res) => {
   try {
     const { id } = req.params; // ID of the requested material
@@ -393,13 +302,15 @@ router.post("/supply-material/:id", async (req, res) => {
     // Check if the material already exists in the database
     const existingMaterial = await Requested.findOne({
       material: requestedMaterial.material,
+      supplier: requestedMaterial.supplier, // Match the same supplier
+      requestedBy: requestedMaterial.requestedBy, // Match the same requester
       status: "Supplied", // Ensure we only check supplied materials
     });
 
     if (existingMaterial) {
       // If the material exists, increment its quantity and update the cost
       existingMaterial.requestedQuantity += requestedMaterial.requestedQuantity;
-      existingMaterial.cost = calculatedTotalCost; // Update the total cost
+      existingMaterial.cost += calculatedTotalCost; // Add to the total cost
       existingMaterial.costPerUnit = costPerUnit; // Update the cost per unit
       existingMaterial.suppliedDate = new Date(); // Update the supplied date
       await existingMaterial.save();
