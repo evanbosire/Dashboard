@@ -244,10 +244,15 @@ router.post("/supply-material/:id", async (req, res) => {
       return res.status(404).json({ message: "Requested material not found" });
     }
 
+    // Use the correct field name
+    const materialName = requestedMaterial.material;
+
+    if (!materialName) {
+      return res.status(400).json({ message: "Material name is missing" });
+    }
+
     // Check if the material already exists in inventory
-    let existingMaterial = await Inventory.findOne({
-      materialName: requestedMaterial.materialName,
-    });
+    let existingMaterial = await Inventory.findOne({ material: materialName });
 
     if (existingMaterial) {
       // If the material exists, update its quantity and cost
@@ -257,7 +262,7 @@ router.post("/supply-material/:id", async (req, res) => {
     } else {
       // If the material does not exist, create a new inventory entry
       const newInventoryMaterial = new Inventory({
-        materialName: requestedMaterial.materialName,
+        material: materialName,
         quantity: quantity,
         cost: cost,
         status: "In Stock",
