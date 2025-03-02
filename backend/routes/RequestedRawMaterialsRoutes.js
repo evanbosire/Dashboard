@@ -6,15 +6,81 @@ const Employee = require("../models/Employee");
 const AllocatedMaterials = require("../models/AllocatedMaterials ");
 const PDFDocument = require("pdfkit");
 
-// POST route to handle raw material requests by the inventory manager
+// // POST route to handle raw material requests by the inventory manager
+// router.post("/request-material", async (req, res) => {
+//   const { materialName, quantity, description, deliveryDate, supplier } =
+//     req.body;
+
+//   // Check if all required fields are present
+//   if (
+//     !materialName ||
+//     !quantity ||
+//     !description ||
+//     !deliveryDate ||
+//     !supplier
+//   ) {
+//     return res.status(400).json({ message: "All fields are required." });
+//   }
+
+//   try {
+//     // Find the Inventory Manager
+//     const inventoryManager = await Employee.findOne({
+//       role: "Inventory manager",
+//     });
+
+//     if (!inventoryManager) {
+//       return res.status(404).json({
+//         message: "No Inventory Manager found in the system",
+//       });
+//     }
+
+//     // Create a new requested material document
+//     const newRequestedMaterial = new Requested({
+//       material: materialName,
+//       requestedQuantity: quantity,
+//       description: description,
+//       supplier: supplier,
+//       deliveryDate: new Date(deliveryDate),
+//       status: "Requested", // Initial status
+//       supplyStatus: "Not Supplied", // Initial supply status
+//       requestedBy: inventoryManager._id, // Automatically set the Inventory Manager
+//     });
+
+//     // Save the document to the database
+//     await newRequestedMaterial.save();
+
+//     // Fetch the saved material with populated requestedBy field
+//     const populatedMaterial = await Requested.findById(
+//       newRequestedMaterial._id
+//     ).populate({
+//       path: "requestedBy",
+//       select: "role firstName lastName",
+//     });
+
+//     // Send a success response
+//     res.status(201).json({
+//       message: "Request submitted successfully",
+//       data: populatedMaterial,
+//     });
+//   } catch (err) {
+//     console.error("Error in request-material API:", err);
+//     res.status(500).json({
+//       message: "Failed to submit request",
+//       error: err.message,
+//     });
+//   }
+// });
+// Inventory manager requests for raw materials from the supplier.
+
 router.post("/request-material", async (req, res) => {
-  const { materialName, quantity, description, deliveryDate, supplier } =
+  const { materialName, quantity, unit, description, deliveryDate, supplier } =
     req.body;
 
   // Check if all required fields are present
   if (
     !materialName ||
     !quantity ||
+    !unit ||
     !description ||
     !deliveryDate ||
     !supplier
@@ -38,6 +104,7 @@ router.post("/request-material", async (req, res) => {
     const newRequestedMaterial = new Requested({
       material: materialName,
       requestedQuantity: quantity,
+      unit: unit, // Store the unit in the database
       description: description,
       supplier: supplier,
       deliveryDate: new Date(deliveryDate),
@@ -71,7 +138,7 @@ router.post("/request-material", async (req, res) => {
   }
 });
 
-// GET all requested materials
+// Supplier GET all requested materials by the inventory manager
 router.get("/requested-materials", async (req, res) => {
   try {
     const requestedMaterials = await Requested.find().sort({
@@ -90,7 +157,7 @@ router.get("/requested-materials", async (req, res) => {
   }
 });
 
-// PUT route to update request status
+// PUT route to update request status by the supplier to accept or decline the supply of raw materials
 router.put("/requested-materials/:id", async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -123,32 +190,93 @@ router.put("/requested-materials/:id", async (req, res) => {
     });
   }
 });
-// Supply Material API Endpoint
+// Supply Raw Material by supplier to inventory API Endpoint
+// router.post("/supply-material/:id", async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { cost } = req.body; // Extract cost from the request body
+
+//     // Check if the ID is a valid MongoDB ObjectId
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ message: "Invalid ID format" });
+//     }
+
+//     // Find and update the requested material by ID
+//     const updatedRequest = await Requested.findByIdAndUpdate(
+//       id,
+//       {
+//         status: "Supplied",
+//         supplyStatus: "Pending Acceptance",
+//         suppliedDate: new Date(),
+//         cost: cost, // Add the cost to the updated request
+//       },
+//       { new: true }
+//     );
+
+//     if (!updatedRequest) {
+//       return res.status(404).json({ message: "Requested material not found" });
+//     }
+
+//     res.status(200).json({
+//       message: "Raw material successfully supplied.",
+//       data: updatedRequest,
+//     });
+//   } catch (error) {
+//     console.error("Error in supply-material API:", error);
+//     res.status(500).json({
+//       message: "Failed to supply material",
+//       error: error.message,
+//     });
+//   }
+// });
 router.post("/supply-material/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { cost } = req.body; // Extract cost from the request body
+    const { cost, quantity } = req.body; // Include quantity in request body
 
-    // Check if the ID is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid ID format" });
     }
 
-    // Find and update the requested material by ID
+    // Find the requested material
+    const requestedMaterial = await Requested.findById(id);
+    if (!requestedMaterial) {
+      return res.status(404).json({ message: "Requested material not found" });
+    }
+
+    // Check if the material already exists in inventory
+    let existingMaterial = await Inventory.findOne({
+      materialName: requestedMaterial.materialName,
+    });
+
+    if (existingMaterial) {
+      // If the material exists, update its quantity and cost
+      existingMaterial.quantity += quantity;
+      existingMaterial.cost = cost; // Update cost as needed
+      await existingMaterial.save();
+    } else {
+      // If the material does not exist, create a new inventory entry
+      const newInventoryMaterial = new Inventory({
+        materialName: requestedMaterial.materialName,
+        quantity: quantity,
+        cost: cost,
+        status: "In Stock",
+      });
+      await newInventoryMaterial.save();
+    }
+
+    // Update the request status
     const updatedRequest = await Requested.findByIdAndUpdate(
       id,
       {
         status: "Supplied",
         supplyStatus: "Pending Acceptance",
         suppliedDate: new Date(),
-        cost: cost, // Add the cost to the updated request
+        cost: cost,
+        quantity: quantity,
       },
       { new: true }
     );
-
-    if (!updatedRequest) {
-      return res.status(404).json({ message: "Requested material not found" });
-    }
 
     res.status(200).json({
       message: "Raw material successfully supplied.",
@@ -163,7 +291,7 @@ router.post("/supply-material/:id", async (req, res) => {
   }
 });
 
-// GET all supplied materials sorted by suppliedDate in descending order
+// GET all supplied materials by supplier to the inventory manager sorted by suppliedDate in descending order
 router.get("/supplied-materials", async (req, res) => {
   try {
     const materials = await Requested.find({ status: "Supplied" }).sort({

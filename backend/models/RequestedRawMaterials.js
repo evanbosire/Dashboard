@@ -10,6 +10,10 @@ const requestedRawMaterialsSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  unit: {
+    type: String,
+    required: true, // Ensure a unit is always provided
+  },
   description: {
     type: String,
     required: true,
