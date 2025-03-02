@@ -470,6 +470,106 @@ router.post("/pay-material/:id", async (req, res) => {
   }
 });
 
+// router.get("/download-receipt/:id", async (req, res) => {
+//   const { id } = req.params;
+
+//   if (!mongoose.Types.ObjectId.isValid(id)) {
+//     return res.status(400).json({ message: "Invalid ID format" });
+//   }
+
+//   try {
+//     const material = await Requested.findById(id).populate("customer supplier");
+//     console.log("Material Details:", material);
+
+//     if (!material) {
+//       return res.status(404).json({ message: "Material not found" });
+//     }
+
+//     // Create a PDF document
+//     const doc = new PDFDocument();
+
+//     // Set response headers before sending any data
+//     res.setHeader("Content-Type", "application/pdf");
+//     res.setHeader(
+//       "Content-Disposition",
+//       `attachment; filename=receipt_${id}.pdf`
+//     );
+
+//     // Pipe the PDF directly to the response
+//     doc.pipe(res);
+
+//     // Helper function to add separator line
+//     const addSeparatorLine = () => {
+//       doc.text("-----------------------------------------------", {
+//         align: "left",
+//       });
+//     };
+
+//     addSeparatorLine();
+
+//     // Company header
+//     doc.fontSize(18).text("CORRUGATED SHEETS LIMITED", { align: "center" });
+//     doc.fontSize(12).text("Receipt for Material Supply", { align: "center" });
+//     doc.fontSize(10).text("www.corrugatedsheetsltd.com", { align: "center" });
+
+//     addSeparatorLine();
+//     addSeparatorLine();
+
+//     // Receipt details
+//     doc
+//       .fontSize(10)
+//       .text(`Receipt Number: ${material._id}`, {
+//         align: "left",
+//         continued: true,
+//       })
+//       .text(`Date: ${new Date().toISOString().split("T")[0]}`, {
+//         align: "right",
+//       });
+
+//     addSeparatorLine();
+
+//     // Item Description
+//     doc.text("Item Description:");
+//     doc.text(`* Material: ${material.material || "N/A"}`);
+//     doc.text(`* Quantity: ${material.requestedQuantity || "N/A"}`);
+//     doc.text(`* Total Cost: ${material.cost || "N/A"} KSH`);
+
+//     addSeparatorLine();
+
+//     // Payment Information
+//     doc.text("Payment Information:");
+//     doc.text(`Transaction Ref. No: ${material.paymentCode || "N/A"}`);
+//     doc.text(`Payment Status: ${material.paymentStatus || "N/A"}`);
+
+//     addSeparatorLine();
+
+//     // Summary
+//     doc.text("Summary:");
+//     doc.text(`Total Amount: ${material.cost || 0} KSH`);
+//     doc.text(`Delivery Status: ${material.status || "N/A"}`);
+//     if (material.remarks) {
+//       doc.text(`Remarks: ${material.remarks}`);
+//     }
+
+//     addSeparatorLine();
+
+//     // Footer
+//     doc.text("Thank you for your business!", { align: "left" });
+
+//     addSeparatorLine();
+
+//     // End the document
+//     doc.end();
+//   } catch (err) {
+//     console.error("Error in generating receipt:", err);
+//     if (!res.headersSent) {
+//       res.status(500).json({
+//         message: "Failed to generate receipt",
+//         error: err.message,
+//       });
+//     }
+//   }
+// });
 router.get("/download-receipt/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -478,8 +578,7 @@ router.get("/download-receipt/:id", async (req, res) => {
   }
 
   try {
-    const material = await Requested.findById(id).populate("customer supplier");
-    console.log("Material Details:", material);
+    const material = await Requested.findById(id);
 
     if (!material) {
       return res.status(404).json({ message: "Material not found" });
@@ -528,11 +627,17 @@ router.get("/download-receipt/:id", async (req, res) => {
 
     addSeparatorLine();
 
+    // Supplier Information
+    doc.text("Supplier Information:");
+    doc.text(`* Name: ${material.supplier || "N/A"}`); // Access supplier name directly
+
+    addSeparatorLine();
+
     // Item Description
     doc.text("Item Description:");
     doc.text(`* Material: ${material.material || "N/A"}`);
     doc.text(`* Quantity: ${material.requestedQuantity || "N/A"}`);
-    doc.text(`* Total Cost: ${material.cost || "N/A"} KSH`);
+    doc.text(`* Total Cost: KSHS ${material.cost || "N/A"}`);
 
     addSeparatorLine();
 
