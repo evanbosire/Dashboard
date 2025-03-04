@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const ProductSchema = new mongoose.Schema({
   name: String, // Product name (e.g., Aluminium Zinc-Coated Sheets)
   description: String, // Product description
+  price: Number,
   quantity: Number, // Available stock quantity
 });
 

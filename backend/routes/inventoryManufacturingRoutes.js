@@ -4,6 +4,7 @@ const {
   Product,
   ManufacturingRequest,
 } = require("../models/inventoryManufacturing"); // Import models
+const CustomerProduct = require("../models/CustomerProduct");
 
 /**
  * @route POST /api/request-manufacturing
@@ -202,6 +203,99 @@ router.get("/inventory-stock", async (req, res) => {
     res.status(500).json({ message: "Error fetching inventory stock", error });
   }
 });
+/**
+ * @route POST /api/post-product/:productId
+ * @description Move a product from inventory to the customer side, updating stock and price.
+ */
+router.post("/post-product/:productId", async (req, res) => {
+  const { productId } = req.params;
+  const { description, price, quantityToPost } = req.body;
 
-// Export router
+  try {
+    // Validate input data
+    if (!quantityToPost || quantityToPost <= 0) {
+      return res
+        .status(400)
+        .json({ message: "Quantity must be greater than zero" });
+    }
+    if (!price || price <= 0) {
+      return res
+        .status(400)
+        .json({ message: "Price must be greater than zero" });
+    }
+
+    // Find the product in inventory
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res
+        .status(404)
+        .json({ message: "Product not found in inventory" });
+    }
+
+    // Ensure enough stock is available
+    if (quantityToPost > product.quantity) {
+      return res
+        .status(400)
+        .json({ message: "Insufficient quantity in stock" });
+    }
+
+    // Decrement inventory stock
+    product.quantity -= quantityToPost;
+    await product.save();
+
+    // Check if product exists in customer side
+    let customerProduct = await CustomerProduct.findOne({ productId });
+
+    if (customerProduct) {
+      // If product exists, update stock and price
+      customerProduct.quantity += quantityToPost;
+      customerProduct.price = price;
+      customerProduct.description = description;
+    } else {
+      // If not, create a new customer-side product entry
+      customerProduct = new CustomerProduct({
+        productId: product._id,
+        name: product.name,
+        description,
+        price,
+        quantity: quantityToPost,
+      });
+    }
+
+    await customerProduct.save();
+
+    res.status(200).json({
+      message: "Product posted to customer side successfully",
+      inventory: product,
+      customerStock: customerProduct,
+    });
+  } catch (error) {
+    console.error("Error posting product to customer side:", error);
+    res
+      .status(500)
+      .json({ message: "Error posting product to customer side", error });
+  }
+});
+// API to get posted products for the customer side
+router.get("/posted-products", async (req, res) => {
+  try {
+    // Retrieve all posted products (customer-side products)
+    const postedProducts = await CustomerProduct.find();
+
+    if (!postedProducts || postedProducts.length === 0) {
+      return res.status(404).json({ message: "No posted products found" });
+    }
+
+    res.status(200).json({
+      message: "Posted products retrieved successfully",
+      postedProducts,
+    });
+  } catch (error) {
+    console.error("Error retrieving posted products:", error);
+    res
+      .status(500)
+      .json({ message: "Error retrieving posted products", error });
+  }
+});
+
 module.exports = router;
