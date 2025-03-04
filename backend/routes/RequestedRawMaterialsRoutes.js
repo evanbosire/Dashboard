@@ -1047,63 +1047,54 @@ router.get("/stock", async (req, res) => {
 //     }
 //   }
 // );
-router.post(
-  "/allocate-materials-manufacturing/:materialId",
-  async (req, res) => {
-    const { materialId } = req.params;
-    const { quantity } = req.body;
+// Allocate materials to manufacturing
+router.post("/allocate/:materialId", async (req, res) => {
+  const { materialId } = req.params;
+  const { quantity } = req.body;
 
-    try {
-      // Validate quantity
-      if (!quantity || isNaN(quantity) || quantity <= 0) {
-        return res
-          .status(400)
-          .json({ message: "Quantity must be a number greater than zero." });
-      }
-
-      // Fetch the allocated raw material
-      const rawMaterial = await Requested.findById(materialId);
-      if (!rawMaterial) {
-        return res.status(404).json({ message: "Material not found." });
-      }
-
-      // Ensure the quantity is a number
-      const parsedQuantity = parseInt(quantity, 10);
-
-      // Check if there's enough allocated quantity
-      if (rawMaterial.allocatedQuantity < parsedQuantity) {
-        return res
-          .status(400)
-          .json({ message: "Insufficient allocated materials." });
-      }
-
-      // Deduct allocated quantity
-      rawMaterial.allocatedQuantity -= parsedQuantity;
-
-      // Update status if fully allocated
-      if (rawMaterial.allocatedQuantity === 0) {
-        rawMaterial.status = "Fully Allocated";
-      }
-
-      await rawMaterial.save();
-
-      // Store allocated materials separately
-      const allocatedMaterial = new AllocatedMaterials({
-        materialId,
-        allocatedQuantity: parsedQuantity,
-      });
-
-      await allocatedMaterial.save();
-
-      res.status(200).json({
-        message: "Materials successfully allocated to manufacturing",
-        allocatedMaterial,
-      });
-    } catch (err) {
-      console.error("Error allocating materials:", err);
-      res.status(500).json({ error: err.message });
+  try {
+    // Validate quantity
+    if (!quantity || isNaN(quantity) || quantity <= 0) {
+      return res
+        .status(400)
+        .json({ message: "Quantity must be a number greater than zero." });
     }
+
+    // Find the material
+    const rawMaterial = await Requested.findById(materialId);
+    if (!rawMaterial) {
+      return res.status(404).json({ message: "Material not found." });
+    }
+
+    // Ensure the quantity is a number
+    const parsedQuantity = parseInt(quantity, 10);
+
+    // Check if enough material is available
+    if (rawMaterial.allocatedQuantity < parsedQuantity) {
+      return res
+        .status(400)
+        .json({ message: "Not enough allocated materials." });
+    }
+
+    // Deduct the allocated quantity
+    rawMaterial.allocatedQuantity -= parsedQuantity;
+
+    // Update status if fully allocated
+    if (rawMaterial.allocatedQuantity === 0) {
+      rawMaterial.status = "Fully Allocated";
+    }
+
+    // Save changes
+    await rawMaterial.save();
+
+    res.status(200).json({
+      message: "Allocation successful",
+      updatedMaterial: rawMaterial,
+    });
+  } catch (err) {
+    console.error("Error allocating materials:", err);
+    res.status(500).json({ error: err.message });
   }
-);
+});
 
 module.exports = router;
