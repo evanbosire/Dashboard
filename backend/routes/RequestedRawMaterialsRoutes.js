@@ -1054,10 +1054,11 @@ router.post(
     const { quantity } = req.body;
 
     try {
-      if (!quantity || quantity <= 0) {
+      // Validate quantity
+      if (!quantity || isNaN(quantity) || quantity <= 0) {
         return res
           .status(400)
-          .json({ message: "Quantity must be greater than zero." });
+          .json({ message: "Quantity must be a number greater than zero." });
       }
 
       // Fetch the allocated raw material
@@ -1066,34 +1067,30 @@ router.post(
         return res.status(404).json({ message: "Material not found." });
       }
 
-      // Ensure the `allocatedQuantity` field exists
-      if (
-        !rawMaterial.allocatedQuantity ||
-        rawMaterial.allocatedQuantity < quantity
-      ) {
+      // Ensure the quantity is a number
+      const parsedQuantity = parseInt(quantity, 10);
+
+      // Check if there's enough allocated quantity
+      if (rawMaterial.allocatedQuantity < parsedQuantity) {
         return res
           .status(400)
           .json({ message: "Insufficient allocated materials." });
       }
 
       // Deduct allocated quantity
-      rawMaterial.allocatedQuantity -= quantity;
+      rawMaterial.allocatedQuantity -= parsedQuantity;
 
-      // Update status based on remaining quantity
+      // Update status if fully allocated
       if (rawMaterial.allocatedQuantity === 0) {
         rawMaterial.status = "Fully Allocated";
-      } else {
-        rawMaterial.status = "Partially Allocated";
       }
 
       await rawMaterial.save();
 
-      // Store allocated materials separately with extra details
+      // Store allocated materials separately
       const allocatedMaterial = new AllocatedMaterials({
         materialId,
-        materialName: rawMaterial.materialName, // Ensure this exists in Requested Schema
-        allocatedQuantity: quantity,
-        allocatedAt: new Date(),
+        allocatedQuantity: parsedQuantity,
       });
 
       await allocatedMaterial.save();
