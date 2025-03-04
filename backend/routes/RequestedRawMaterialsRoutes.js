@@ -996,6 +996,57 @@ router.get("/stock", async (req, res) => {
 });
 
 // Allocate materials to manufacturing
+// router.post(
+//   "/allocate-materials-manufacturing/:materialId",
+//   async (req, res) => {
+//     const { materialId } = req.params;
+//     const { quantity } = req.body;
+
+//     try {
+//       if (!quantity || quantity <= 0) {
+//         return res
+//           .status(400)
+//           .json({ message: "Quantity must be greater than zero." });
+//       }
+
+//       // Fetch the allocated raw material
+//       const rawMaterial = await Requested.findById(materialId);
+//       if (!rawMaterial) {
+//         return res.status(404).json({ message: "Material not found." });
+//       }
+
+//       if (rawMaterial.allocatedQuantity < quantity) {
+//         return res
+//           .status(400)
+//           .json({ message: "Insufficient allocated materials." });
+//       }
+
+//       // Deduct allocated quantity
+//       rawMaterial.allocatedQuantity -= quantity;
+//       if (rawMaterial.allocatedQuantity === 0) {
+//         rawMaterial.status = "Fully Allocated";
+//       }
+
+//       await rawMaterial.save();
+
+//       // Store allocated materials separately
+//       const allocatedMaterial = new AllocatedMaterials({
+//         materialId,
+//         allocatedQuantity: quantity,
+//       });
+
+//       await allocatedMaterial.save();
+
+//       res.status(200).json({
+//         message: "Materials successfully allocated to manufacturing",
+//         allocatedMaterial,
+//       });
+//     } catch (err) {
+//       console.error("Error allocating materials:", err);
+//       res.status(500).json({ error: err.message });
+//     }
+//   }
+// );
 router.post(
   "/allocate-materials-manufacturing/:materialId",
   async (req, res) => {
@@ -1015,7 +1066,11 @@ router.post(
         return res.status(404).json({ message: "Material not found." });
       }
 
-      if (rawMaterial.allocatedQuantity < quantity) {
+      // Ensure the `allocatedQuantity` field exists
+      if (
+        !rawMaterial.allocatedQuantity ||
+        rawMaterial.allocatedQuantity < quantity
+      ) {
         return res
           .status(400)
           .json({ message: "Insufficient allocated materials." });
@@ -1023,16 +1078,22 @@ router.post(
 
       // Deduct allocated quantity
       rawMaterial.allocatedQuantity -= quantity;
+
+      // Update status based on remaining quantity
       if (rawMaterial.allocatedQuantity === 0) {
         rawMaterial.status = "Fully Allocated";
+      } else {
+        rawMaterial.status = "Partially Allocated";
       }
 
       await rawMaterial.save();
 
-      // Store allocated materials separately
+      // Store allocated materials separately with extra details
       const allocatedMaterial = new AllocatedMaterials({
         materialId,
+        materialName: rawMaterial.materialName, // Ensure this exists in Requested Schema
         allocatedQuantity: quantity,
+        allocatedAt: new Date(),
       });
 
       await allocatedMaterial.save();
