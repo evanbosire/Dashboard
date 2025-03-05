@@ -301,15 +301,8 @@ router.get("/posted-products", async (req, res) => {
 // Checkout route
 router.post("/checkout", async (req, res) => {
   try {
-    const {
-      cartItems,
-      userId,
-      paymentCode,
-      phoneNumber,
-      email,
-      county,
-      description,
-    } = req.body;
+    const { cartItems, paymentCode, phoneNumber, email, county, description } =
+      req.body;
 
     // Validate cart items
     if (!cartItems || cartItems.length === 0) {
@@ -347,7 +340,6 @@ router.post("/checkout", async (req, res) => {
 
     // Create a new order
     const order = new Order({
-      customer: userId,
       products: cartItems.map((item) => ({
         product: item.productId, // Reference to the CustomerProduct
         quantity: item.quantity,
