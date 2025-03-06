@@ -298,11 +298,85 @@ router.get("/posted-products", async (req, res) => {
       .json({ message: "Error retrieving posted products", error });
   }
 });
-// Checkout route
+// // Checkout route
+// router.post("/checkout", async (req, res) => {
+//   try {
+//     const { cartItems, paymentCode, phoneNumber, email, county, description } =
+//       req.body;
+
+//     // Validate cart items
+//     if (!cartItems || cartItems.length === 0) {
+//       return res.status(400).json({ message: "Cart is empty" });
+//     }
+
+//     // Check if the requested quantity is available for each product
+//     for (const item of cartItems) {
+//       const product = await CustomerProduct.findById(item.productId);
+//       if (!product) {
+//         return res
+//           .status(404)
+//           .json({ message: `Product ${item.productId} not found` });
+//       }
+
+//       if (product.quantity < item.quantity) {
+//         return res.status(400).json({
+//           message: `Insufficient stock for ${product.name}. Available: ${product.quantity}, Requested: ${item.quantity}`,
+//         });
+//       }
+//     }
+
+//     // Subtract the quantity from the available stock
+//     for (const item of cartItems) {
+//       const product = await CustomerProduct.findById(item.productId);
+//       product.quantity -= item.quantity; // Subtract the quantity
+//       await product.save(); // Save the updated product
+//     }
+
+//     // Calculate total price
+//     const totalPrice = cartItems.reduce(
+//       (total, item) => total + item.price * item.quantity,
+//       0
+//     );
+
+//     // Create a new order
+//     const order = new Order({
+//       products: cartItems.map((item) => ({
+//         product: item.productId, // Reference to the CustomerProduct
+//         quantity: item.quantity,
+//       })),
+//       totalPrice,
+//       shippingAddress: {
+//         phoneNumber,
+//         email,
+//         county,
+//         description,
+//       },
+//       paymentMethod: "M-PESA",
+//       paymentCode,
+//       status: "Pending",
+//     });
+
+//     // Save the order to the database
+//     await order.save();
+
+//     res.status(201).json({ message: "Order placed successfully", order });
+//   } catch (error) {
+//     console.error("Error during checkout:", error);
+//     res.status(500).json({ message: "Error during checkout", error });
+//   }
+// });
 router.post("/checkout", async (req, res) => {
   try {
-    const { cartItems, paymentCode, phoneNumber, email, county, description } =
-      req.body;
+    const {
+      cartItems,
+      paymentCode,
+      firstName,
+      lastName,
+      phoneNumber,
+      email,
+      county,
+      description,
+    } = req.body;
 
     // Validate cart items
     if (!cartItems || cartItems.length === 0) {
@@ -346,6 +420,8 @@ router.post("/checkout", async (req, res) => {
       })),
       totalPrice,
       shippingAddress: {
+        firstName,
+        lastName,
         phoneNumber,
         email,
         county,
@@ -379,5 +455,280 @@ router.get("/orders", async (req, res) => {
     res.status(500).json({ message: "Error fetching orders", error });
   }
 });
+// finance check if payment code is available and approve the order
+router.put("/finance/approve-order/:orderId", async (req, res) => {
+  try {
+    const { orderId } = req.params;
 
+    // Fetch the order
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Check if payment code exists
+    if (!order.paymentCode) {
+      return res.status(400).json({ message: "Payment code is missing" });
+    }
+
+    // Update order status to "Approved" and mark as paid
+    order.status = "Approved";
+    await order.save();
+
+    res
+      .status(200)
+      .json({ message: "Order approved and marked as paid", order });
+  } catch (error) {
+    console.error("Error approving order:", error);
+    res.status(500).json({ message: "Error approving order", error });
+  }
+});
+// api for customer to download receipt if the order is approved
+router.get("/customer/receipt/:orderId", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    // Fetch the order with populated product details
+    const order = await Order.findById(orderId).populate(
+      "products.product",
+      "name price"
+    );
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.status !== "Approved") {
+      return res.status(400).json({ message: "Order is not approved yet" });
+    }
+
+    // Generate receipt (you can use a library like `pdfkit` to create a PDF receipt)
+    const receipt = {
+      orderId: order._id,
+      totalPrice: order.totalPrice,
+      products: order.products.map((item) => ({
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+      })),
+      shippingAddress: order.shippingAddress,
+      paymentMethod: order.paymentMethod,
+      paymentCode: order.paymentCode,
+      status: order.status,
+    };
+
+    res
+      .status(200)
+      .json({ message: "Receipt generated successfully", receipt });
+  } catch (error) {
+    console.error("Error generating receipt:", error);
+    res.status(500).json({ message: "Error generating receipt", error });
+  }
+});
+// inventory get all approved orders
+router.get("/inventory/approved-orders", async (req, res) => {
+  try {
+    const orders = await Order.find({ status: "Approved" }).populate(
+      "products.product",
+      "name price"
+    );
+
+    res.status(200).json({ orders });
+  } catch (error) {
+    console.error("Error fetching approved orders:", error);
+    res.status(500).json({ message: "Error fetching approved orders", error });
+  }
+});
+// inventory manager to release the order and update its status to "Released".
+router.put("/inventory/release-order/:orderId", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.status !== "Approved") {
+      return res.status(400).json({ message: "Order is not approved yet" });
+    }
+
+    // Update order status to "Released"
+    order.status = "Released";
+    await order.save();
+
+    res.status(200).json({ message: "Order released successfully", order });
+  } catch (error) {
+    console.error("Error releasing order:", error);
+    res.status(500).json({ message: "Error releasing order", error });
+  }
+});
+// This route fetches all released orders for the dispatcher manager.
+router.get("/dispatcher/released-orders", async (req, res) => {
+  try {
+    const orders = await Order.find({ status: "Released" }).populate(
+      "products.product",
+      "name price"
+    );
+
+    res.status(200).json({ orders });
+  } catch (error) {
+    console.error("Error fetching released orders:", error);
+    res.status(500).json({ message: "Error fetching released orders", error });
+  }
+});
+// This route allows the dispatcher manager to allocate an order to a driver and update its status to "Dispatched".
+router.put("/dispatcher/dispatch-order/:orderId", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.status !== "Released") {
+      return res.status(400).json({ message: "Order is not released yet" });
+    }
+
+    // Update order status to "Dispatched"
+    order.status = "Dispatched";
+    await order.save();
+
+    res.status(200).json({ message: "Order dispatched successfully", order });
+  } catch (error) {
+    console.error("Error dispatching order:", error);
+    res.status(500).json({ message: "Error dispatching order", error });
+  }
+});
+// This route fetches all dispatched orders for the driver.
+router.get("/driver/dispatched-orders", async (req, res) => {
+  try {
+    const orders = await Order.find({ status: "Dispatched" }).populate(
+      "products.product",
+      "name price"
+    );
+
+    res.status(200).json({ orders });
+  } catch (error) {
+    console.error("Error fetching dispatched orders:", error);
+    res
+      .status(500)
+      .json({ message: "Error fetching dispatched orders", error });
+  }
+});
+// This route allows the driver to mark an order as shipped and update its status to "Shipped".
+router.put("/driver/ship-order/:orderId", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.status !== "Dispatched") {
+      return res.status(400).json({ message: "Order is not dispatched yet" });
+    }
+
+    // Update order status to "Shipped"
+    order.status = "Shipped";
+    await order.save();
+
+    res.status(200).json({ message: "Order shipped successfully", order });
+  } catch (error) {
+    console.error("Error shipping order:", error);
+    res.status(500).json({ message: "Error shipping order", error });
+  }
+});
+// This route allows the driver to mark an order as delivered and update its status to "Delivered".
+router.put("/driver/deliver-order/:orderId", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.status !== "Shipped") {
+      return res.status(400).json({ message: "Order is not shipped yet" });
+    }
+
+    // Update order status to "Delivered"
+    order.status = "Delivered";
+    await order.save();
+
+    res.status(200).json({ message: "Order delivered successfully", order });
+  } catch (error) {
+    console.error("Error delivering order:", error);
+    res.status(500).json({ message: "Error delivering order", error });
+  }
+});
+// This route allows the customer to provide feedback on a delivered order.
+router.post("/customer/feedback/:orderId", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { feedback } = req.body;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.status !== "Delivered") {
+      return res.status(400).json({ message: "Order is not delivered yet" });
+    }
+
+    // Save feedback (you can add a feedback field to the Order schema if needed)
+    order.feedback = feedback;
+    await order.save();
+
+    res.status(200).json({ message: "Feedback submitted successfully", order });
+  } catch (error) {
+    console.error("Error submitting feedback:", error);
+    res.status(500).json({ message: "Error submitting feedback", error });
+  }
+});
+
+// Route to get all delivered orders with feedback
+router.get("/dispatcher/delivered-orders", async (req, res) => {
+  try {
+    // Fetch all orders with status "Delivered"
+    const deliveredOrders = await Order.find({ status: "Delivered" }).populate(
+      "products.product",
+      "name price"
+    );
+
+    // Check if there are no delivered orders
+    if (deliveredOrders.length === 0) {
+      return res.status(404).json({ message: "No delivered orders found" });
+    }
+
+    // Map through the orders to include feedback (if available)
+    const ordersWithFeedback = deliveredOrders.map((order) => ({
+      orderId: order._id,
+      totalPrice: order.totalPrice,
+      products: order.products.map((item) => ({
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+      })),
+      shippingAddress: order.shippingAddress,
+      paymentMethod: order.paymentMethod,
+      paymentCode: order.paymentCode,
+      status: order.status,
+      feedback: order.feedback || "No feedback provided", // Include feedback if available
+    }));
+
+    // Return the list of delivered orders with feedback
+    res.status(200).json({
+      message: "Delivered orders fetched successfully",
+      orders: ordersWithFeedback,
+    });
+  } catch (error) {
+    console.error("Error fetching delivered orders:", error);
+    res.status(500).json({ message: "Error fetching delivered orders", error });
+  }
+});
 module.exports = router;
