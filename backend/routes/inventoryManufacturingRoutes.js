@@ -368,9 +368,10 @@ router.post("/checkout", async (req, res) => {
 // Fetch all orders with populated product details
 router.get("/orders", async (req, res) => {
   try {
-    const orders = await Order.find()
-      .populate("customer", "name email") // Populate customer details
-      .populate("products.product", "name price image"); // Populate product details
+    const orders = await Order.find().populate(
+      "products.product",
+      "name price image"
+    ); // Populate only product details
 
     res.status(200).json({ orders });
   } catch (error) {
