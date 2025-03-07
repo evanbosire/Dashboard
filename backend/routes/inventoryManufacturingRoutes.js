@@ -515,6 +515,7 @@ router.get("/customer/receipt/:orderId", async (req, res) => {
       paymentMethod: order.paymentMethod,
       paymentCode: order.paymentCode,
       status: order.status,
+      createdAt: order.createdAt,
     };
 
     res
