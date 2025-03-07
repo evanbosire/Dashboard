@@ -732,4 +732,67 @@ router.get("/dispatcher/delivered-orders", async (req, res) => {
     res.status(500).json({ message: "Error fetching delivered orders", error });
   }
 });
+// Get all dispatched orders for driver
+router.get("/orders/dispatched", async (req, res) => {
+  try {
+    const orders = await Order.find({ status: "Dispatched" })
+      .populate("products.product")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      orders,
+    });
+  } catch (error) {
+    console.error("Error fetching dispatched orders:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching dispatched orders",
+      error: error.message,
+    });
+  }
+});
+
+// Get all shipped orders for driver
+router.get("/orders/shipped", async (req, res) => {
+  try {
+    const orders = await Order.find({ status: "Shipped" })
+      .populate("products.product")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      orders,
+    });
+  } catch (error) {
+    console.error("Error fetching shipped orders:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching shipped orders",
+      error: error.message,
+    });
+  }
+});
+
+// Get all delivered orders for driver
+router.get("/orders/delivered", async (req, res) => {
+  try {
+    const orders = await Order.find({ status: "Delivered" })
+      .populate("products.product")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      orders,
+    });
+  } catch (error) {
+    console.error("Error fetching delivered orders:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching delivered orders",
+      error: error.message,
+    });
+  }
+});
+
 module.exports = router;
