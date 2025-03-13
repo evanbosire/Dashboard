@@ -14,9 +14,6 @@ const path = require("path");
 router.post("/service", async (req, res) => {
   const { email, ironSheetType, color, gauge, location, description, price } =
     req.body;
-
-  console.log("Searching for customer with email:", email); // Debugging
-
   const customer = await Customer.findOne({
     email: email.trim().toLowerCase(),
   });
@@ -63,11 +60,17 @@ const isValidPaymentCode = (code) => {
   return regex.test(code);
 };
 
-// Customer pays for the service using a route parameter for serviceId
 router.post("/payment/:serviceId", async (req, res) => {
   try {
     const { serviceId } = req.params; // Get serviceId from URL
     const { amount, paymentCode, paymentMethod } = req.body;
+
+    console.log("Received payment request:", {
+      serviceId,
+      amount,
+      paymentCode,
+      paymentMethod,
+    });
 
     // Validate required fields (except serviceId, since it's in the URL)
     if (!amount || !paymentCode || !paymentMethod) {
@@ -77,11 +80,14 @@ router.post("/payment/:serviceId", async (req, res) => {
     // Check if the selected service exists
     const service = await Service.findById(serviceId);
     if (!service) {
+      console.log("Service not found for ID:", serviceId);
       return res.status(404).json({ message: "Service not found" });
     }
 
     // Validate payment code format
+    console.log("Validating payment code:", paymentCode);
     if (!isValidPaymentCode(paymentCode)) {
+      console.log("Invalid payment code:", paymentCode);
       return res.status(400).json({
         message:
           "Invalid payment code format. Must be 10 uppercase characters (A-Z, 1-9) without zeros.",
@@ -93,12 +99,17 @@ router.post("/payment/:serviceId", async (req, res) => {
       PaymentCode: paymentCode,
     });
     if (existingPayment) {
+      console.log("Payment code already used:", paymentCode);
       return res.status(400).json({ message: "Payment code already used" });
     }
 
-    // Ensure payment method is valid
-    const validPaymentMethods = ["Mpesa", "Bank", "Cash"];
-    if (!validPaymentMethods.includes(paymentMethod)) {
+    // Normalize and validate payment method
+    const normalizedPaymentMethod = paymentMethod
+      .replace("-", "")
+      .toLowerCase();
+    const validPaymentMethods = ["mpesa", "bank", "cash"];
+    if (!validPaymentMethods.includes(normalizedPaymentMethod)) {
+      console.log("Invalid payment method:", paymentMethod);
       return res.status(400).json({ message: "Invalid payment method" });
     }
 
@@ -107,18 +118,25 @@ router.post("/payment/:serviceId", async (req, res) => {
       serviceId,
       amount,
       PaymentCode: paymentCode,
-      PaymentMethod: paymentMethod,
+      PaymentMethod: normalizedPaymentMethod,
       PaymentStatus: "Paid",
       DatePaid: new Date(),
     });
 
-    await payment.save();
+    try {
+      await payment.save();
+      await Service.findByIdAndUpdate(serviceId, { paymentStatus: "Paid" });
+    } catch (error) {
+      console.error("Database error:", error);
+      return res
+        .status(500)
+        .json({ message: "Database error", error: error.message });
+    }
 
-    // Update service payment status
-    await Service.findByIdAndUpdate(serviceId, { paymentStatus: "Paid" });
-
+    console.log("Payment successful:", payment);
     res.status(201).json({ message: "Payment successful", payment });
   } catch (error) {
+    console.error("Server error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
