@@ -20,6 +20,7 @@ const adminRoutes = require("./routes/adminRoutes"); // Admin routes for login a
 const requestedRawMaterialsRoutes = require("./routes/RequestedRawMaterialsRoutes");
 const manufacturingRoutes = require("./routes/ManufacturingTaskRoutes");
 const inventoryManufacturingRoutes = require("./routes/inventoryManufacturingRoutes");
+const serviceRoutes = require("./routes/serviceRoutes");
 
 const app = express();
 const port = process.env.PORT || 5000; // Use the environment PORT variable
@@ -58,6 +59,8 @@ app.use("/api/inventory", requestedRawMaterialsRoutes);
 // Use the manufacturing route
 app.use("/api/manufacturing", manufacturingRoutes);
 app.use("/api/inventory/manufacturing", inventoryManufacturingRoutes);
+//  service routes
+app.use("/api", serviceRoutes);
 
 // Serve Uploaded Images
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

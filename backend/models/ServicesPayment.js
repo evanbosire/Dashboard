@@ -1,21 +1,20 @@
-// models/ServicesPayment.js
 const mongoose = require("mongoose");
 
-const customerDetailsSchema = new mongoose.Schema({
-  driverName: String,
-  Email: String,
-  Phone: String,
+const ServicesPaymentSchema = new mongoose.Schema({
+  serviceId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Service",
+    required: true,
+  },
+  amount: { type: Number, required: true },
+  PaymentCode: { type: String, required: true, unique: true },
+  PaymentMethod: {
+    type: String,
+    enum: ["Mpesa", "Bank", "Cash"], // Ensure Mpesa is included if valid
+    required: true,
+  },
+  PaymentStatus: { type: String, default: "Pending" },
+  DatePaid: { type: Date, default: Date.now }, // Automatically sets date
 });
 
-const servicesPaymentSchema = new mongoose.Schema({
-  customerDetails: customerDetailsSchema,
-  Location: String,
-  ServiceName: String,
-  BookingDate: String,
-  ServicingDate: String,
-  AmountPaid: String,
-  PaymentDate: String,
-  PaymentStatus: String,
-});
-
-module.exports = mongoose.model("ServicesPayment", servicesPaymentSchema);
+module.exports = mongoose.model("ServicesPayment", ServicesPaymentSchema);
