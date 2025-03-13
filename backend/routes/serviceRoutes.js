@@ -103,12 +103,9 @@ router.post("/payment/:serviceId", async (req, res) => {
       return res.status(400).json({ message: "Payment code already used" });
     }
 
-    // Normalize and validate payment method
-    const normalizedPaymentMethod = paymentMethod
-      .replace("-", "")
-      .toLowerCase();
-    const validPaymentMethods = ["mpesa", "bank", "cash"];
-    if (!validPaymentMethods.includes(normalizedPaymentMethod)) {
+    // Ensure payment method is valid
+    const validPaymentMethods = ["Mpesa", "Bank", "Cash"]; // Match the enum values in the schema
+    if (!validPaymentMethods.includes(paymentMethod)) {
       console.log("Invalid payment method:", paymentMethod);
       return res.status(400).json({ message: "Invalid payment method" });
     }
@@ -118,20 +115,15 @@ router.post("/payment/:serviceId", async (req, res) => {
       serviceId,
       amount,
       PaymentCode: paymentCode,
-      PaymentMethod: normalizedPaymentMethod,
+      PaymentMethod: paymentMethod, // Ensure this matches the enum value
       PaymentStatus: "Paid",
       DatePaid: new Date(),
     });
 
-    try {
-      await payment.save();
-      await Service.findByIdAndUpdate(serviceId, { paymentStatus: "Paid" });
-    } catch (error) {
-      console.error("Database error:", error);
-      return res
-        .status(500)
-        .json({ message: "Database error", error: error.message });
-    }
+    await payment.save();
+
+    // Update service payment status
+    await Service.findByIdAndUpdate(serviceId, { paymentStatus: "Paid" });
 
     console.log("Payment successful:", payment);
     res.status(201).json({ message: "Payment successful", payment });

@@ -10,7 +10,7 @@ const ServicesPaymentSchema = new mongoose.Schema({
   PaymentCode: { type: String, required: true, unique: true },
   PaymentMethod: {
     type: String,
-    enum: ["Mpesa", "Bank", "Cash"], // Ensure Mpesa is included if valid
+    enum: ["Mpesa", "Bank", "Cash"],
     required: true,
   },
   PaymentStatus: { type: String, default: "Pending" },
