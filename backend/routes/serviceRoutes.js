@@ -218,9 +218,9 @@ router.get("/receipt/:paymentCode", async (req, res) => {
 // Finance manager views all paid services
 router.get("/finance/services", async (req, res) => {
   try {
-    const services = await Service.find({ paymentStatus: "Paid" }).select(
-      "-userId -price"
-    ); // Exclude userId
+    const services = await Service.find({ paymentStatus: "Paid" })
+      .select("-userId") // Exclude userId
+      .sort({ createdAt: -1 }); // Sort by newest first
 
     if (!services.length) {
       return res.status(404).json({ message: "No paid services found" });
@@ -234,12 +234,24 @@ router.get("/finance/services", async (req, res) => {
 
 // Finance manager approves a service
 router.put("/finance/approve/:id", async (req, res) => {
-  const service = await Service.findByIdAndUpdate(
-    req.params.id,
-    { status: "Approved" },
-    { new: true }
-  );
-  res.send(service);
+  try {
+    const service = await Service.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: "Approved",
+        // updatedAt will be automatically updated by Mongoose
+      },
+      { new: true }
+    );
+
+    if (!service) {
+      return res.status(404).json({ message: "Service not found" });
+    }
+
+    res.status(200).json(service);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
 });
 
 // Service manager views all approved services
