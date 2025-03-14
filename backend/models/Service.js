@@ -12,6 +12,8 @@ const ServiceSchema = new mongoose.Schema(
     price: Number,
     status: { type: String, default: "Pending" },
     paymentStatus: { type: String, default: "Unpaid" },
+    paymentCode: { type: String },
+    paymentMethod: { type: String },
     feedback: String,
     allocatedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     renderedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

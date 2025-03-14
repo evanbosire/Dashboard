@@ -64,14 +64,6 @@ router.post("/payment/:serviceId", async (req, res) => {
   try {
     const { serviceId } = req.params; // Get serviceId from URL
     const { amount, paymentCode, paymentMethod } = req.body;
-
-    console.log("Received payment request:", {
-      serviceId,
-      amount,
-      paymentCode,
-      paymentMethod,
-    });
-
     // Validate required fields (except serviceId, since it's in the URL)
     if (!amount || !paymentCode || !paymentMethod) {
       return res.status(400).json({ message: "All fields are required" });
@@ -123,7 +115,11 @@ router.post("/payment/:serviceId", async (req, res) => {
     await payment.save();
 
     // Update service payment status
-    await Service.findByIdAndUpdate(serviceId, { paymentStatus: "Paid" });
+    await Service.findByIdAndUpdate(serviceId, {
+      paymentStatus: "Paid",
+      paymentCode: paymentCode,
+      paymentMethod: paymentMethod,
+    });
 
     console.log("Payment successful:", payment);
     res.status(201).json({ message: "Payment successful", payment });
@@ -132,21 +128,24 @@ router.post("/payment/:serviceId", async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
-router.get("/receipt/:paymentCode", async (req, res) => {
+
+router.get("/customer/receipt/:serviceId", async (req, res) => {
   try {
-    const { paymentCode } = req.params;
+    const { serviceId } = req.params;
 
-    // Find the payment record
-    const payment = await ServicesPayment.findOne({
-      PaymentCode: paymentCode,
-    }).populate("serviceId");
+    // Fetch the service payment details
+    const service = await Service.findById(serviceId);
 
-    if (!payment) {
-      return res.status(404).json({ message: "Payment record not found" });
+    if (!service) {
+      return res.status(404).json({ message: "Service not found" });
     }
 
-    // Get the service details properly
-    const service = payment.serviceId || {}; // Avoid errors if serviceId is null
+    // Check if the service payment is approved
+    if (service.status !== "Approved") {
+      return res
+        .status(400)
+        .json({ message: "Service payment is not approved yet" });
+    }
 
     // Define the receipts folder
     const receiptsFolder = path.join(__dirname, "..", "receipts");
@@ -155,7 +154,7 @@ router.get("/receipt/:paymentCode", async (req, res) => {
     }
 
     // Set receipt file name
-    const receiptFileName = `receipt_${paymentCode}.pdf`;
+    const receiptFileName = `receipt_${serviceId}.pdf`;
     const receiptPath = path.join(receiptsFolder, receiptFileName);
 
     // Create PDF document
@@ -167,12 +166,11 @@ router.get("/receipt/:paymentCode", async (req, res) => {
     doc.fontSize(20).text("Corrugated Sheets Limited", { align: "center" });
     doc.moveDown(1);
 
-    // Add payment details
+    // Add service details
     doc.fontSize(14).text(`Receipt for Service Payment`);
     doc.moveDown(0.5);
-    doc
-      .fontSize(12)
-      .text(`Service Name: ${service.ironSheetType || "Unknown"}`);
+    doc.fontSize(12).text(`Service ID: ${service._id}`);
+    doc.text(`Iron Sheet Type: ${service.ironSheetType || "Unknown"}`);
     doc.text(`Color: ${service.color || "N/A"}`);
     doc.text(`Gauge: ${service.gauge || "N/A"}`);
     doc.text(`Location: ${service.location || "N/A"}`);
@@ -181,11 +179,12 @@ router.get("/receipt/:paymentCode", async (req, res) => {
     doc.text(`Payment Status: ${service.paymentStatus || "N/A"}`);
     doc.moveDown(0.5);
 
-    doc.text(`Amount Paid: KES ${payment.amount}`);
-    doc.text(`Payment Code: ${payment.PaymentCode}`);
-    doc.text(`Payment Method: ${payment.PaymentMethod}`);
-    doc.text(`Payment Status: ${payment.PaymentStatus}`);
-    doc.text(`Date Paid: ${new Date(payment.DatePaid).toLocaleString()}`);
+    // Add payment details
+    doc.text(`Amount Paid: KES ${service.price}`);
+    doc.text(`Payment Code: ${service.paymentCode || "N/A"}`);
+    doc.text(`Payment Method: ${service.paymentMethod || "N/A"}`);
+    doc.text(`Payment Status: ${service.paymentStatus || "N/A"}`);
+    doc.text(`Date Paid: ${new Date(service.createdAt).toLocaleString()}`);
     doc.moveDown(1);
 
     // Add footer
@@ -211,8 +210,8 @@ router.get("/receipt/:paymentCode", async (req, res) => {
       });
     });
   } catch (error) {
-    console.error("Receipt error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error generating receipt:", error);
+    res.status(500).json({ message: "Error generating receipt", error });
   }
 });
 // Finance manager views all paid services
