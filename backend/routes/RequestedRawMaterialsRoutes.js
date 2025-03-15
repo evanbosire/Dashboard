@@ -744,7 +744,7 @@ router.get("/view-manufacturing-requests", async (req, res) => {
 });
 // production manager requests raw material to manufactur the requested product by inventory
 router.post("/request-raw-materials", async (req, res) => {
-  const { material, requestedQuantity, description } = req.body;
+  const { material, requestedQuantity, description, unit } = req.body;
 
   try {
     // First find a Production Manager
@@ -765,7 +765,8 @@ router.post("/request-raw-materials", async (req, res) => {
       status: "Requested",
       supplier: "Supplier Name",
       deliveryDate: new Date(),
-      requestedBy: productionManager._id, // Automatically use the Production Manager's ID
+      requestedBy: productionManager._id,
+      unit,
     });
 
     await newRequest.save();
