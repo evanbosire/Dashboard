@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const Employee = require("./Employee");
 
 const requestedRawMaterialsSchema = new mongoose.Schema({
   material: {
@@ -30,6 +29,7 @@ const requestedRawMaterialsSchema = new mongoose.Schema({
       "Supply Rejected",
       "Allocated",
       "Partially Allocated",
+      "Fully Allocated",
     ],
     default: "Requested",
   },
