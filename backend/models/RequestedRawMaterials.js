@@ -50,6 +50,11 @@ const requestedRawMaterialsSchema = new mongoose.Schema({
     enum: ["Not Supplied", "Pending Acceptance", "Accepted", "Rejected"],
     default: "Not Supplied",
   },
+  supplyInventoryStatus: {
+    type: String,
+    enum: ["Pending Confirmation", "Confirmed", "Received by Manufacturing"],
+    default: "Pending Confirmation",
+  },
   suppliedDate: {
     type: Date,
   },

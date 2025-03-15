@@ -793,5 +793,209 @@ router.post("/allocate/:materialId", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// Get raw materials with status "Partially Allocated" or "Fully Allocated"
+router.get("/manufacturing/allocated-materials", async (req, res) => {
+  try {
+    // Fetch materials with status "Partially Allocated" or "Fully Allocated"
+    const materials = await Requested.find({
+      status: { $in: ["Partially Allocated", "Fully Allocated"] },
+    });
+
+    // If no materials are found, return a 404 response
+    if (materials.length === 0) {
+      return res.status(404).json({ message: "No allocated materials found." });
+    }
+
+    // Return the materials with their details
+    res.status(200).json({
+      message: "Allocated materials retrieved successfully.",
+      materials,
+    });
+  } catch (err) {
+    console.error("Error fetching allocated materials:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+// New inventory -> production -> manufacturing raw materials process
+// Allocate Raw Materials to Production Manager for Confirmation
+router.post("/allocate-by-inventory", async (req, res) => {
+  const { materialId, quantity } = req.body;
+
+  try {
+    const productionManager = await Employee.findOne({
+      role: "Production manager",
+    });
+    if (!productionManager) {
+      return res
+        .status(400)
+        .json({ message: "No Production Manager found in the system" });
+    }
+
+    const rawMaterial = await Requested.findById(materialId);
+    if (!rawMaterial) {
+      return res.status(404).json({ message: "Material not found" });
+    }
+
+    if (rawMaterial.requestedQuantity < quantity) {
+      return res.status(400).json({
+        message: "Not enough stock available",
+        requested: quantity,
+        available: rawMaterial.requestedQuantity,
+      });
+    }
+
+    // Correct calculation: Reduce requestedQuantity and add to allocatedQuantity
+    const updatedMaterial = await Requested.findByIdAndUpdate(
+      materialId,
+      {
+        $inc: {
+          requestedQuantity: -quantity, // Subtract allocated amount from requested
+          allocatedQuantity: quantity, // Add to allocated amount
+        },
+        $set: {
+          supplyInventoryStatus: "Pending Confirmation",
+          allocatedBy: productionManager._id,
+        },
+      },
+      { new: true }
+    );
+
+    res.json({
+      message: "Material allocated successfully, awaiting confirmation",
+      material: updatedMaterial,
+    });
+  } catch (err) {
+    console.error("Error during allocation:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+// The production manager fetches the pending confirmation raw materials for confirmation
+router.get("/pending-confirmation", async (req, res) => {
+  try {
+    const pendingMaterials = await Requested.find({
+      supplyInventoryStatus: "Pending Confirmation",
+    });
+
+    if (pendingMaterials.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No materials pending confirmation" });
+    }
+
+    res.json({ materials: pendingMaterials });
+  } catch (err) {
+    console.error("Error fetching pending confirmation materials:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+// Production manager confirms the raw materials
+router.post("/confirm-by-production/:materialId", async (req, res) => {
+  const { materialId } = req.params;
+
+  try {
+    const rawMaterial = await Requested.findById(materialId);
+    if (!rawMaterial) {
+      return res.status(404).json({ message: "Material not found" });
+    }
+
+    if (rawMaterial.supplyInventoryStatus !== "Pending Confirmation") {
+      return res
+        .status(400)
+        .json({ message: "Material is not awaiting confirmation" });
+    }
+
+    // Update status to confirmed
+    const updatedMaterial = await Requested.findByIdAndUpdate(
+      materialId,
+      {
+        $set: {
+          supplyInventoryStatus: "Confirmed", // Change status to confirmed
+        },
+      },
+      { new: true }
+    );
+
+    res.json({
+      message: "Material confirmed and ready for manufacturing",
+      material: updatedMaterial,
+    });
+  } catch (err) {
+    console.error("Error during confirmation:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+// Get all raw materials with supplyInventoryStatus "Confirmed" for the manufacturing team
+router.get("/confirmed-materials", async (req, res) => {
+  try {
+    const confirmedMaterials = await Requested.find({
+      supplyInventoryStatus: "Confirmed",
+    });
+
+    if (confirmedMaterials.length === 0) {
+      return res.status(404).json({ message: "No confirmed materials found" });
+    }
+
+    res.json(confirmedMaterials);
+  } catch (err) {
+    console.error("Error fetching confirmed materials:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+// Manufacturing Team Receives the Raw Materials
+router.post("/receive-by-manufacturing/:materialId", async (req, res) => {
+  const { materialId } = req.params;
+
+  try {
+    const rawMaterial = await Requested.findById(materialId);
+    if (!rawMaterial) {
+      return res.status(404).json({ message: "Material not found" });
+    }
+
+    if (rawMaterial.supplyInventoryStatus !== "Confirmed") {
+      return res
+        .status(400)
+        .json({ message: "Material is not confirmed for manufacturing" });
+    }
+
+    // Update status to received and reset allocatedQuantity
+    const updatedMaterial = await Requested.findByIdAndUpdate(
+      materialId,
+      {
+        $set: {
+          supplyInventoryStatus: "Received by Manufacturing",
+          allocatedQuantity: 0, // Reset allocated quantity
+        },
+      },
+      { new: true }
+    );
+
+    res.json({
+      message: "Material received by Manufacturing Team",
+      material: updatedMaterial,
+    });
+  } catch (err) {
+    console.error("Error during receiving process:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+// Get all received raw materials
+router.get("/received-materials-by-manufacturing", async (req, res) => {
+  try {
+    const receivedMaterials = await Requested.find({
+      supplyInventoryStatus: "Received by Manufacturing",
+    });
+
+    if (receivedMaterials.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No materials received by manufacturing yet" });
+    }
+
+    res.json(receivedMaterials);
+  } catch (err) {
+    console.error("Error fetching received materials:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;
