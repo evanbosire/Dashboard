@@ -6,72 +6,7 @@ const Employee = require("../models/Employee");
 const AllocatedMaterials = require("../models/AllocatedMaterials ");
 const PDFDocument = require("pdfkit");
 
-// // POST route to handle raw material requests by the inventory manager
-// router.post("/request-material", async (req, res) => {
-//   const { materialName, quantity, description, deliveryDate, supplier } =
-//     req.body;
-
-//   // Check if all required fields are present
-//   if (
-//     !materialName ||
-//     !quantity ||
-//     !description ||
-//     !deliveryDate ||
-//     !supplier
-//   ) {
-//     return res.status(400).json({ message: "All fields are required." });
-//   }
-
-//   try {
-//     // Find the Inventory Manager
-//     const inventoryManager = await Employee.findOne({
-//       role: "Inventory manager",
-//     });
-
-//     if (!inventoryManager) {
-//       return res.status(404).json({
-//         message: "No Inventory Manager found in the system",
-//       });
-//     }
-
-//     // Create a new requested material document
-//     const newRequestedMaterial = new Requested({
-//       material: materialName,
-//       requestedQuantity: quantity,
-//       description: description,
-//       supplier: supplier,
-//       deliveryDate: new Date(deliveryDate),
-//       status: "Requested", // Initial status
-//       supplyStatus: "Not Supplied", // Initial supply status
-//       requestedBy: inventoryManager._id, // Automatically set the Inventory Manager
-//     });
-
-//     // Save the document to the database
-//     await newRequestedMaterial.save();
-
-//     // Fetch the saved material with populated requestedBy field
-//     const populatedMaterial = await Requested.findById(
-//       newRequestedMaterial._id
-//     ).populate({
-//       path: "requestedBy",
-//       select: "role firstName lastName",
-//     });
-
-//     // Send a success response
-//     res.status(201).json({
-//       message: "Request submitted successfully",
-//       data: populatedMaterial,
-//     });
-//   } catch (err) {
-//     console.error("Error in request-material API:", err);
-//     res.status(500).json({
-//       message: "Failed to submit request",
-//       error: err.message,
-//     });
-//   }
-// });
 // Inventory manager requests for raw materials from the supplier.
-
 router.post("/request-material", async (req, res) => {
   const { materialName, quantity, unit, description, deliveryDate, supplier } =
     req.body;
@@ -191,85 +126,6 @@ router.put("/requested-materials/:id", async (req, res) => {
   }
 });
 
-// router.post("/supply-material/:id", async (req, res) => {
-//   try {
-//     const { id } = req.params; // ID of the requested material
-//     const { cost, costPerUnit } = req.body;
-
-//     // Validate the ID
-//     if (!mongoose.Types.ObjectId.isValid(id)) {
-//       return res.status(400).json({ message: "Invalid ID format" });
-//     }
-
-//     // Find the requested material by ID
-//     const requestedMaterial = await Requested.findById(id);
-//     if (!requestedMaterial) {
-//       return res.status(404).json({ message: "Requested material not found" });
-//     }
-
-//     // Validate costPerUnit
-//     if (!costPerUnit || parseFloat(costPerUnit) <= 0) {
-//       return res.status(400).json({ message: "Invalid cost per unit." });
-//     }
-
-//     // Calculate the total cost (already calculated in the frontend, but we can validate it here)
-//     const calculatedTotalCost =
-//       parseFloat(costPerUnit) * requestedMaterial.requestedQuantity;
-
-//     if (calculatedTotalCost !== parseFloat(cost)) {
-//       return res.status(400).json({ message: "Cost calculation mismatch." });
-//     }
-
-//     // Check if the material already exists in the database
-//     const existingMaterial = await Requested.findOne({
-//       material: requestedMaterial.material,
-//       status: "Supplied", // Ensure we only check supplied materials
-//     });
-
-//     if (existingMaterial) {
-//       // If the material exists, increment its quantity and update the cost
-//       existingMaterial.requestedQuantity += requestedMaterial.requestedQuantity;
-//       existingMaterial.cost = calculatedTotalCost; // Update the total cost
-//       existingMaterial.costPerUnit = costPerUnit; // Update the cost per unit
-//       existingMaterial.suppliedDate = new Date(); // Update the supplied date
-//       await existingMaterial.save();
-
-//       res.status(200).json({
-//         message: "Raw material quantity incremented successfully.",
-//         data: existingMaterial,
-//       });
-//     } else {
-//       // If the material does not exist, create a new entry
-//       const newMaterial = new Requested({
-//         material: requestedMaterial.material,
-//         description: requestedMaterial.description,
-//         requestedQuantity: requestedMaterial.requestedQuantity,
-//         status: "Supplied",
-//         supplyStatus: "Pending Acceptance",
-//         suppliedDate: new Date(),
-//         cost: calculatedTotalCost,
-//         costPerUnit: costPerUnit,
-//         unit: requestedMaterial.unit,
-//         supplier: requestedMaterial.supplier,
-//         deliveryDate: requestedMaterial.deliveryDate,
-//         requestedBy: requestedMaterial.requestedBy,
-//         dateRequested: requestedMaterial.dateRequested,
-//       });
-//       await newMaterial.save();
-
-//       res.status(200).json({
-//         message: "New raw material created and supplied successfully.",
-//         data: newMaterial,
-//       });
-//     }
-//   } catch (error) {
-//     console.error("Error in supply-material API:", error);
-//     res.status(500).json({
-//       message: "Failed to supply material",
-//       error: error.message,
-//     });
-//   }
-// });
 router.post("/supply-material/:id", async (req, res) => {
   try {
     const { id } = req.params; // ID of the requested material
@@ -470,106 +326,6 @@ router.post("/pay-material/:id", async (req, res) => {
   }
 });
 
-// router.get("/download-receipt/:id", async (req, res) => {
-//   const { id } = req.params;
-
-//   if (!mongoose.Types.ObjectId.isValid(id)) {
-//     return res.status(400).json({ message: "Invalid ID format" });
-//   }
-
-//   try {
-//     const material = await Requested.findById(id).populate("customer supplier");
-//     console.log("Material Details:", material);
-
-//     if (!material) {
-//       return res.status(404).json({ message: "Material not found" });
-//     }
-
-//     // Create a PDF document
-//     const doc = new PDFDocument();
-
-//     // Set response headers before sending any data
-//     res.setHeader("Content-Type", "application/pdf");
-//     res.setHeader(
-//       "Content-Disposition",
-//       `attachment; filename=receipt_${id}.pdf`
-//     );
-
-//     // Pipe the PDF directly to the response
-//     doc.pipe(res);
-
-//     // Helper function to add separator line
-//     const addSeparatorLine = () => {
-//       doc.text("-----------------------------------------------", {
-//         align: "left",
-//       });
-//     };
-
-//     addSeparatorLine();
-
-//     // Company header
-//     doc.fontSize(18).text("CORRUGATED SHEETS LIMITED", { align: "center" });
-//     doc.fontSize(12).text("Receipt for Material Supply", { align: "center" });
-//     doc.fontSize(10).text("www.corrugatedsheetsltd.com", { align: "center" });
-
-//     addSeparatorLine();
-//     addSeparatorLine();
-
-//     // Receipt details
-//     doc
-//       .fontSize(10)
-//       .text(`Receipt Number: ${material._id}`, {
-//         align: "left",
-//         continued: true,
-//       })
-//       .text(`Date: ${new Date().toISOString().split("T")[0]}`, {
-//         align: "right",
-//       });
-
-//     addSeparatorLine();
-
-//     // Item Description
-//     doc.text("Item Description:");
-//     doc.text(`* Material: ${material.material || "N/A"}`);
-//     doc.text(`* Quantity: ${material.requestedQuantity || "N/A"}`);
-//     doc.text(`* Total Cost: ${material.cost || "N/A"} KSH`);
-
-//     addSeparatorLine();
-
-//     // Payment Information
-//     doc.text("Payment Information:");
-//     doc.text(`Transaction Ref. No: ${material.paymentCode || "N/A"}`);
-//     doc.text(`Payment Status: ${material.paymentStatus || "N/A"}`);
-
-//     addSeparatorLine();
-
-//     // Summary
-//     doc.text("Summary:");
-//     doc.text(`Total Amount: ${material.cost || 0} KSH`);
-//     doc.text(`Delivery Status: ${material.status || "N/A"}`);
-//     if (material.remarks) {
-//       doc.text(`Remarks: ${material.remarks}`);
-//     }
-
-//     addSeparatorLine();
-
-//     // Footer
-//     doc.text("Thank you for your business!", { align: "left" });
-
-//     addSeparatorLine();
-
-//     // End the document
-//     doc.end();
-//   } catch (err) {
-//     console.error("Error in generating receipt:", err);
-//     if (!res.headersSent) {
-//       res.status(500).json({
-//         message: "Failed to generate receipt",
-//         error: err.message,
-//       });
-//     }
-//   }
-// });
 router.get("/download-receipt/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -953,16 +709,6 @@ router.put("/update-stock/:id", async (req, res) => {
   }
 });
 
-// router.get("/stock", async (req, res) => {
-//   try {
-//     const materials = await Requested.find({
-//       status: { $in: ["Partially Allocated", "Accepted"] },
-//     });
-//     res.status(200).json(materials);
-//   } catch (error) {
-//     res.status(500).json({ error: "Internal Server Error" });
-//   }
-// });
 router.get("/stock", async (req, res) => {
   try {
     const materials = await Requested.find({
@@ -996,59 +742,7 @@ router.get("/stock", async (req, res) => {
   }
 });
 
-// // Production Manager Allocates materials to manufacturing
-// router.post(
-//   "/allocate-materials-manufacturing/:materialId",
-//   async (req, res) => {
-//     const { materialId } = req.params;
-//     const { quantity } = req.body;
-
-//     try {
-//       if (!quantity || quantity <= 0) {
-//         return res
-//           .status(400)
-//           .json({ message: "Quantity must be greater than zero." });
-//       }
-
-//       // Fetch the allocated raw material
-//       const rawMaterial = await Requested.findById(materialId);
-//       if (!rawMaterial) {
-//         return res.status(404).json({ message: "Material not found." });
-//       }
-
-//       if (rawMaterial.allocatedQuantity < quantity) {
-//         return res
-//           .status(400)
-//           .json({ message: "Insufficient allocated materials." });
-//       }
-
-//       // Deduct allocated quantity
-//       rawMaterial.allocatedQuantity -= quantity;
-//       if (rawMaterial.allocatedQuantity === 0) {
-//         rawMaterial.status = "Fully Allocated";
-//       }
-
-//       await rawMaterial.save();
-
-//       // Store allocated materials separately
-//       const allocatedMaterial = new AllocatedMaterials({
-//         materialId,
-//         allocatedQuantity: quantity,
-//       });
-
-//       await allocatedMaterial.save();
-
-//       res.status(200).json({
-//         message: "Materials successfully allocated to manufacturing",
-//         allocatedMaterial,
-//       });
-//     } catch (err) {
-//       console.error("Error allocating materials:", err);
-//       res.status(500).json({ error: err.message });
-//     }
-//   }
-// );
-// Allocate materials to manufacturing
+// Allocate materials to manufacturing by the production manager
 router.post("/allocate/:materialId", async (req, res) => {
   const { materialId } = req.params;
   const { quantity } = req.body;
@@ -1080,9 +774,11 @@ router.post("/allocate/:materialId", async (req, res) => {
     // Deduct the allocated quantity
     rawMaterial.allocatedQuantity -= parsedQuantity;
 
-    // Update status if fully allocated
+    // Update status based on the remaining allocated quantity
     if (rawMaterial.allocatedQuantity === 0) {
-      rawMaterial.status = "Fully Allocated";
+      rawMaterial.status = "Fully Allocated"; // No quantity left
+    } else if (rawMaterial.allocatedQuantity > 0) {
+      rawMaterial.status = "Partially Allocated"; // Some quantity left
     }
 
     // Save changes
