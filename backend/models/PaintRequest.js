@@ -8,7 +8,13 @@ const PaintRequestSchema = new mongoose.Schema({
   supplier: { type: String, required: true },
   status: {
     type: String,
-    enum: ["Pending", "Approved", "Rejected", "Supplied", "Received"],
+    enum: [
+      "Pending",
+      "Approved",
+      "Rejected",
+      "Supplied",
+      "Received",
+    ],
     default: "Pending",
   },
   pricePerUnit: { type: Number },

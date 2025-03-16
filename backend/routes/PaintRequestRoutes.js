@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const PaintRequest = require("../models/PaintRequest");
+const PainterAllocation = require("../models/PainterAllocationSchema ")
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const path = require("path");
@@ -298,5 +299,111 @@ router.get("/available-paints", async (req, res) => {
       .json({ message: "Failed to fetch paints", error: err.message });
   }
 });
+// 9. Inventory Manager Allocates Paint to Painter
+router.post("/allocate-paint/:paintId", async (req, res) => {
+  try {
+    const { paintId } = req.params; // Get paintId from URL
+    const { quantity } = req.body; // Get quantity from request body
 
+    // Validate input
+    if (!quantity || quantity <= 0) {
+      return res.status(400).json({ message: "Invalid quantity to allocate" });
+    }
+
+    // Find the paint in stock
+    const paint = await PaintRequest.findById(paintId);
+    if (!paint) {
+      return res.status(404).json({ message: "Paint not found" });
+    }
+
+    // Check if the paint is available (status is "Received")
+    if (paint.status !== "Received") {
+      return res
+        .status(400)
+        .json({ message: "Paint is not available for allocation" });
+    }
+
+    // Check if there is enough quantity to allocate
+    if (paint.quantity < quantity) {
+      return res
+        .status(400)
+        .json({ message: "Insufficient paint quantity in stock" });
+    }
+
+    // Deduct allocated quantity from stock
+    paint.quantity -= quantity;
+    await paint.save();
+
+    // Create allocation record
+    const allocation = new PainterAllocation({
+      paintId,
+      allocatedQuantity: quantity,
+    });
+
+    await allocation.save();
+
+    res.status(200).json({
+      message: "Paint allocated successfully",
+      data: allocation,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to allocate paint",
+      error: err.message,
+    });
+  }
+});
+
+// 10. Inventory Manager Views Allocated Paints
+router.get("/allocated-paints", async (req, res) => {
+  try {
+    // Aggregate to group by color and sum allocated quantities
+    const allocations = await PainterAllocation.aggregate([
+      // Populate the paintId field to access the color
+      {
+        $lookup: {
+          from: "paintrequests", // Collection name for PaintRequest
+          localField: "paintId",
+          foreignField: "_id",
+          as: "paintDetails",
+        },
+      },
+      // Unwind the paintDetails array (since $lookup returns an array)
+      { $unwind: "$paintDetails" },
+      // Group by color and sum allocated quantities
+      {
+        $group: {
+          _id: "$paintDetails.color", // Group by color
+          totalAllocatedQuantity: { $sum: "$allocatedQuantity" }, // Sum allocated quantities
+          allocations: { $push: "$$ROOT" }, // Keep the original documents for reference (optional)
+        },
+      },
+      // Format the output
+      {
+        $project: {
+          _id: 0, // Exclude the default _id field
+          color: "$_id", // Rename _id to color
+          totalAllocatedQuantity: 1, // Include totalAllocatedQuantity
+          allocations: 1, // Include the original documents (optional)
+        },
+      },
+    ]);
+
+    // If no allocations are found, return a 404 response
+    if (!allocations || allocations.length === 0) {
+      return res.status(404).json({ message: "No paint allocations found" });
+    }
+
+    // Return the grouped allocations
+    res.status(200).json({
+      message: "Allocated paints fetched successfully",
+      data: allocations,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to fetch allocated paints",
+      error: err.message,
+    });
+  }
+});
 module.exports = router;
