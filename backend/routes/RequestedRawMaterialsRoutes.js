@@ -7,82 +7,9 @@ const AllocatedMaterials = require("../models/AllocatedMaterials ");
 const PDFDocument = require("pdfkit");
 
 // // Inventory manager requests for raw materials from the supplier.
-// router.post("/request-material", async (req, res) => {
-//   const { materialName, quantity, unit, description, deliveryDate, supplier } =
-//     req.body;
-
-//   // Check if all required fields are present
-//   if (
-//     !materialName ||
-//     !quantity ||
-//     !unit ||
-//     !description ||
-//     !deliveryDate ||
-//     !supplier
-//   ) {
-//     return res.status(400).json({ message: "All fields are required." });
-//   }
-
-//   try {
-//     // Find the Inventory Manager
-//     const inventoryManager = await Employee.findOne({
-//       role: "Inventory manager",
-//     });
-
-//     if (!inventoryManager) {
-//       return res.status(404).json({
-//         message: "No Inventory Manager found in the system",
-//       });
-//     }
-
-//     // Create a new requested material document
-//     const newRequestedMaterial = new Requested({
-//       material: materialName,
-//       requestedQuantity: quantity,
-//       unit: unit, // Store the unit in the database
-//       description: description,
-//       supplier: supplier,
-//       deliveryDate: new Date(deliveryDate),
-//       status: "Requested", // Initial status
-//       supplyStatus: "Not Supplied", // Initial supply status
-//       requestedBy: inventoryManager._id, // Automatically set the Inventory Manager
-//     });
-
-//     // Save the document to the database
-//     await newRequestedMaterial.save();
-
-//     // Fetch the saved material with populated requestedBy field
-//     const populatedMaterial = await Requested.findById(
-//       newRequestedMaterial._id
-//     ).populate({
-//       path: "requestedBy",
-//       select: "role firstName lastName",
-//     });
-
-//     // Send a success response
-//     res.status(201).json({
-//       message: "Request submitted successfully",
-//       data: populatedMaterial,
-//     });
-//   } catch (err) {
-//     console.error("Error in request-material API:", err);
-//     res.status(500).json({
-//       message: "Failed to submit request",
-//       error: err.message,
-//     });
-//   }
-// });
-// Inventory manager requests for raw materials from the supplier with the paint.
 router.post("/request-material", async (req, res) => {
-  const {
-    materialName,
-    quantity,
-    unit,
-    description,
-    deliveryDate,
-    supplier,
-    color,
-  } = req.body;
+  const { materialName, quantity, unit, description, deliveryDate, supplier } =
+    req.body;
 
   // Check if all required fields are present
   if (
@@ -119,7 +46,6 @@ router.post("/request-material", async (req, res) => {
       status: "Requested", // Initial status
       supplyStatus: "Not Supplied", // Initial supply status
       requestedBy: inventoryManager._id, // Automatically set the Inventory Manager
-      color: materialName === "Paint and Colorants" ? color : undefined, // Store the color if applicable
     });
 
     // Save the document to the database
@@ -146,6 +72,80 @@ router.post("/request-material", async (req, res) => {
     });
   }
 });
+// Inventory manager requests for raw materials from the supplier with the paint.
+// router.post("/request-material", async (req, res) => {
+//   const {
+//     materialName,
+//     quantity,
+//     unit,
+//     description,
+//     deliveryDate,
+//     supplier,
+//     color,
+//   } = req.body;
+
+//   // Check if all required fields are present
+//   if (
+//     !materialName ||
+//     !quantity ||
+//     !unit ||
+//     !description ||
+//     !deliveryDate ||
+//     !supplier
+//   ) {
+//     return res.status(400).json({ message: "All fields are required." });
+//   }
+
+//   try {
+//     // Find the Inventory Manager
+//     const inventoryManager = await Employee.findOne({
+//       role: "Inventory manager",
+//     });
+
+//     if (!inventoryManager) {
+//       return res.status(404).json({
+//         message: "No Inventory Manager found in the system",
+//       });
+//     }
+
+//     // Create a new requested material document
+//     const newRequestedMaterial = new Requested({
+//       material: materialName,
+//       requestedQuantity: quantity,
+//       unit: unit, // Store the unit in the database
+//       description: description,
+//       supplier: supplier,
+//       deliveryDate: new Date(deliveryDate),
+//       status: "Requested", // Initial status
+//       supplyStatus: "Not Supplied", // Initial supply status
+//       requestedBy: inventoryManager._id, // Automatically set the Inventory Manager
+//       color: materialName === "Paint and Colorants" ? color : undefined, // Store the color if applicable
+//     });
+
+//     // Save the document to the database
+//     await newRequestedMaterial.save();
+
+//     // Fetch the saved material with populated requestedBy field
+//     const populatedMaterial = await Requested.findById(
+//       newRequestedMaterial._id
+//     ).populate({
+//       path: "requestedBy",
+//       select: "role firstName lastName",
+//     });
+
+//     // Send a success response
+//     res.status(201).json({
+//       message: "Request submitted successfully",
+//       data: populatedMaterial,
+//     });
+//   } catch (err) {
+//     console.error("Error in request-material API:", err);
+//     res.status(500).json({
+//       message: "Failed to submit request",
+//       error: err.message,
+//     });
+//   }
+// });
 
 // Supplier GET all requested materials by the inventory manager
 router.get("/requested-materials", async (req, res) => {

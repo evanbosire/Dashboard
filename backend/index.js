@@ -21,6 +21,7 @@ const requestedRawMaterialsRoutes = require("./routes/RequestedRawMaterialsRoute
 const manufacturingRoutes = require("./routes/ManufacturingTaskRoutes");
 const inventoryManufacturingRoutes = require("./routes/inventoryManufacturingRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
+const PaintRequest = require("./routes/PaintRequestRoutes");
 
 const app = express();
 const port = process.env.PORT || 5000; // Use the environment PORT variable
@@ -61,6 +62,8 @@ app.use("/api/manufacturing", manufacturingRoutes);
 app.use("/api/inventory/manufacturing", inventoryManufacturingRoutes);
 //  service routes
 app.use("/api", serviceRoutes);
+// paint requesting process
+app.use("/api/paint", PaintRequest);
 
 // Serve Uploaded Images
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
