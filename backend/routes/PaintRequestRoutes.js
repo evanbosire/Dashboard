@@ -77,6 +77,14 @@ router.put("/approve-request/:requestId", async (req, res) => {
       .json({ message: "Failed to update request", error: err.message });
   }
 });
+router.get("/paints/approved", async (req, res) => {
+  try {
+    const approvedPaints = await PaintRequest.find({ status: "Approved" });
+    res.status(200).json(approvedPaints);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
 
 // 3. Supplier Supplies the Paint
 router.put("/supply-paint/:requestId", async (req, res) => {
@@ -275,7 +283,7 @@ router.get("/download-receipt/:requestId", async (req, res) => {
   }
 });
 
-// 8. Inventory Manager Views Available Paints
+// 8. Inventory Manager Views Available Paints as paint stock
 router.get("/available-paints", async (req, res) => {
   try {
     const paints = await PaintRequest.find({ status: "Received" });
