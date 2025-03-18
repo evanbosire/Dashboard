@@ -172,6 +172,94 @@ router.post("/payment/:serviceId", async (req, res) => {
   }
 });
 
+// router.get("/customer/receipt/:serviceId", async (req, res) => {
+
+//   try {
+//     const { serviceId } = req.params;
+
+//     // Fetch the service payment details
+//     const service = await Service.findById(serviceId);
+
+//     if (!service) {
+//       return res.status(404).json({ message: "Service not found" });
+//     }
+
+//     // Check if the service payment is approved
+//     if (service.status !== "Approved") {
+//       return res
+//         .status(400)
+//         .json({ message: "Service payment is not approved yet" });
+//     }
+
+//     // Define the receipts folder
+//     const receiptsFolder = path.join(__dirname, "..", "receipts");
+//     if (!fs.existsSync(receiptsFolder)) {
+//       fs.mkdirSync(receiptsFolder, { recursive: true });
+//     }
+
+//     // Set receipt file name
+//     const receiptFileName = `receipt_${serviceId}.pdf`;
+//     const receiptPath = path.join(receiptsFolder, receiptFileName);
+
+//     // Create PDF document
+//     const doc = new PDFDocument();
+//     const stream = fs.createWriteStream(receiptPath);
+//     doc.pipe(stream);
+
+//     // Add company name
+//     doc.fontSize(20).text("Corrugated Sheets Limited", { align: "center" });
+//     doc.moveDown(1);
+
+//     // Add service details
+//     doc.fontSize(14).text(`Receipt for Service Payment`);
+//     doc.moveDown(0.5);
+//     doc.fontSize(12).text(`Service ID: ${service._id}`);
+//     doc.text(`Iron Sheet Type: ${service.ironSheetType || "Unknown"}`);
+//     doc.text(`Color: ${service.color || "N/A"}`);
+//     doc.text(`Gauge: ${service.gauge || "N/A"}`);
+//     doc.text(`Location: ${service.location || "N/A"}`);
+//     doc.text(`Description: ${service.description || "N/A"}`);
+//     doc.text(`Price: KES ${service.price || "0"}`);
+//     doc.text(`Payment Status: ${service.paymentStatus || "N/A"}`);
+//     doc.moveDown(0.5);
+
+//     // Add payment details
+//     doc.text(`Amount Paid: KES ${service.price}`);
+//     doc.text(`Payment Code: ${service.paymentCode || "N/A"}`);
+//     doc.text(`Payment Method: ${service.paymentMethod || "N/A"}`);
+//     doc.text(`Payment Status: ${service.paymentStatus || "N/A"}`);
+//     doc.text(`Date Paid: ${new Date(service.createdAt).toLocaleString()}`);
+//     doc.moveDown(1);
+
+//     // Add footer
+//     doc.fontSize(10).text("Thank you for your payment!", { align: "center" });
+
+//     // Finalize the document
+//     doc.end();
+
+//     // Wait for PDF to finish writing
+//     stream.on("finish", () => {
+//       res.download(receiptPath, receiptFileName, (err) => {
+//         if (err) {
+//           console.error("Error sending file:", err);
+//           return res.status(500).json({ message: "Error generating receipt" });
+//         }
+
+//         // Optional: Delete file after download
+//         setTimeout(() => {
+//           if (fs.existsSync(receiptPath)) {
+//             fs.unlinkSync(receiptPath);
+//           }
+//         }, 10000);
+//       });
+//     });
+//   } catch (error) {
+//     console.error("Error generating receipt:", error);
+//     res.status(500).json({ message: "Error generating receipt", error });
+//   }
+// });
+
+//  Customer to download the service receipt
 router.get("/customer/receipt/:serviceId", async (req, res) => {
   try {
     const { serviceId } = req.params;
@@ -218,7 +306,11 @@ router.get("/customer/receipt/:serviceId", async (req, res) => {
     doc.text(`Gauge: ${service.gauge || "N/A"}`);
     doc.text(`Location: ${service.location || "N/A"}`);
     doc.text(`Description: ${service.description || "N/A"}`);
-    doc.text(`Price: KES ${service.price || "0"}`);
+
+    // Add numberOfSheets, pricePerSheet, and totalPrice
+    doc.text(`Number of Sheets: ${service.numberOfSheets || "N/A"}`);
+    doc.text(`Price Per Sheet: KES ${service.pricePerSheet || "0"}`);
+    doc.text(`Total Price: KES ${service.totalPrice || "0"}`);
     doc.text(`Payment Status: ${service.paymentStatus || "N/A"}`);
     doc.moveDown(0.5);
 
