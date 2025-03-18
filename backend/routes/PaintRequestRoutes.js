@@ -5,6 +5,8 @@ const PainterAllocation = require("../models/PainterAllocationSchema ")
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const path = require("path");
+const Tool = require("../models/ToolSchema ");
+const Painter = require("../models/PainterSchema");
 
 // 1. Inventory Manager Requests Paint
 router.post("/request-paint", async (req, res) => {
@@ -406,4 +408,114 @@ router.get("/allocated-paints", async (req, res) => {
     });
   }
 });
+
+// Inventory Manager adds or updates a tool.
+router.post("/add-tool", async (req, res) => {
+  try {
+    const { name, quantity, unit } = req.body;
+
+    // Validate input
+    if (!name || !quantity || quantity <= 0 || !unit) {
+      return res.status(400).json({ message: "Invalid input data" });
+    }
+
+    // Check if the unit provided is valid
+    const validUnits = ["pieces", "sheets", "units", "liters", "tubes", "pairs", "sets", "rolls"];
+    if (!validUnits.includes(unit)) {
+      return res.status(400).json({ message: "Invalid unit type" });
+    }
+
+    // Check if the tool already exists
+    let tool = await Tool.findOne({ name });
+
+    if (tool) {
+      // Ensure the unit is the same as the existing tool's unit
+      if (tool.unit !== unit) {
+        return res.status(400).json({ message: `Unit mismatch! Existing tool '${name}' uses '${tool.unit}'.` });
+      }
+
+      // Update quantity if tool exists
+      tool.quantity += quantity;
+      await tool.save();
+
+      return res.status(200).json({
+        message: "Tool quantity updated successfully",
+        data: tool,
+      });
+    } else {
+      // Create a new tool if it doesn't exist
+      tool = new Tool({ name, quantity, unit });
+      await tool.save();
+
+      return res.status(201).json({
+        message: "Tool added successfully",
+        data: tool,
+      });
+    }
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to add or update tool",
+      error: err.message,
+    });
+  }
+});
+
+// Inventory Manager views available tools
+router.get("/tools", async (req, res) => {
+  try {
+    const tools = await Tool.find();
+
+    res.status(200).json({
+      message: "Tools fetched successfully",
+      data: tools,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to fetch tools",
+      error: err.message,
+    });
+  }
+});
+router.post("/request-tools", async (req, res) => {
+  try {
+    const { name, quantity } = req.body;
+
+    // Validate input
+    if (!name || !quantity || quantity <= 0) {
+      return res.status(400).json({ message: "Invalid input data" });
+    }
+
+    // Find the tool by name
+    const tool = await Tool.findOne({ name });
+    if (!tool) {
+      return res.status(404).json({ message: "Tool not found" });
+    }
+
+    // Check if the tool is available in sufficient quantity
+    if (tool.quantity < quantity) {
+      return res
+        .status(400)
+        .json({
+          message: `Insufficient tool quantity. Available: ${tool.quantity} ${tool.unit}`,
+        });
+    }
+
+    // Reduce tool quantity
+    tool.quantity -= quantity;
+    tool.status = "Released";
+    tool.releasedAt = new Date();
+    await tool.save();
+
+    res.status(200).json({
+      message: `Tool '${name}' requested successfully. ${tool.quantity} ${tool.unit} remaining.`,
+      data: tool,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to request tool",
+      error: err.message,
+    });
+  }
+});
+
 module.exports = router;

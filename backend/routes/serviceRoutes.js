@@ -10,24 +10,64 @@ const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const path = require("path");
 
+// // Create a service request
+// router.post("/service", async (req, res) => {
+//   const { email, ironSheetType, color, gauge, location, description, price } =
+//     req.body;
+//   const customer = await Customer.findOne({
+//     email: email.trim().toLowerCase(),
+//   });
+
+//   if (!customer) {
+//     console.log("Customer not found!"); // Debugging
+//     return res.status(404).json({ message: "Customer not found" });
+//   }
+
+//   if (customer.status !== "active") {
+//     return res.status(403).json({ message: "Customer account is not active" });
+//   }
+
+//   console.log("Customer found:", customer); // Debugging
+
+//   const service = new Service({
+//     userId: customer._id, // Reference Customer ID
+//     ironSheetType,
+//     color,
+//     gauge,
+//     location,
+//     description,
+//     price,
+//   });
+
+//   await service.save();
+//   res.status(201).json(service);
+// });
 // Create a service request
 router.post("/service", async (req, res) => {
-  const { email, ironSheetType, color, gauge, location, description, price } =
-    req.body;
+  const {
+    email,
+    ironSheetType,
+    color,
+    gauge,
+    location,
+    description,
+    numberOfSheets,
+    pricePerSheet,
+    totalPrice,
+  } = req.body;
+
   const customer = await Customer.findOne({
     email: email.trim().toLowerCase(),
   });
 
   if (!customer) {
-    console.log("Customer not found!"); // Debugging
+    
     return res.status(404).json({ message: "Customer not found" });
   }
 
   if (customer.status !== "active") {
     return res.status(403).json({ message: "Customer account is not active" });
   }
-
-  console.log("Customer found:", customer); // Debugging
 
   const service = new Service({
     userId: customer._id, // Reference Customer ID
@@ -36,12 +76,15 @@ router.post("/service", async (req, res) => {
     gauge,
     location,
     description,
-    price,
+    numberOfSheets,
+    pricePerSheet,
+    totalPrice,
   });
 
   await service.save();
   res.status(201).json(service);
 });
+
 
 // Customer views their services
 router.get("/customer/services", async (req, res) => {
