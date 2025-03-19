@@ -612,5 +612,32 @@ router.get("/serviceManager/completed-services", async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+router.get("/user", async (req, res) => {
+  // Check if the email query parameter exists
+  if (!req.query.email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
 
+  // Safely trim the email
+  const email = req.query.email.trim();
+
+  try {
+    // Use case-insensitive search
+    const customer = await Customer.findOne({
+      email: { $regex: new RegExp(`^${email}$`, "i") },
+    });
+
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    res.status(200).json({
+      customerName: customer.customerName,
+      phone: customer.phone,
+    });
+  } catch (error) {
+    console.error("Error fetching customer:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 module.exports = router;
