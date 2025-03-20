@@ -45,6 +45,8 @@ const path = require("path");
 // Create a service request
 router.post("/service", async (req, res) => {
   const {
+    customerName,
+    phone,
     email,
     ironSheetType,
     color,
@@ -71,6 +73,8 @@ router.post("/service", async (req, res) => {
 
   const service = new Service({
     userId: customer._id, // Reference Customer ID
+    customerName,
+    phone,
     ironSheetType,
     color,
     gauge,

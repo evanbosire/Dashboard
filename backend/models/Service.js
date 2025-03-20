@@ -4,6 +4,8 @@ const ServiceSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     ironSheetType: { type: String, required: true },
+    customerName: { type: String, required: true },
+    phone: { type: Number, required: true },
     color: { type: String, required: true },
     gauge: { type: String, required: true },
     location: { type: String, required: true },
