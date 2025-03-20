@@ -1,13 +1,13 @@
-// models/Messages.js
 const mongoose = require("mongoose");
 
 const messageSchema = new mongoose.Schema({
-  Sender: { type: String, required: true },
-  Recipient: { type: String, required: true },
-  Message: { type: String, required: true },
-  Date: { type: Date, required: true },
-  Reply: { type: String, required: true },
-  ReplyDate: { type: Date, required: true },
+  sender: { type: String, required: true }, // e.g., "customer", "finance manager"
+  receiver: { type: String, required: true }, // e.g., "finance manager", "driver"
+  message: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now }, // Automatically set the timestamp
+  customerName: { type: String, default: null }, // Only for customer messages
 });
 
-module.exports = mongoose.model("Message", messageSchema);
+const Message = mongoose.model("Message", messageSchema);
+
+module.exports = Message;
