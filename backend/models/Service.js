@@ -19,7 +19,7 @@ const ServiceSchema = new mongoose.Schema(
     paymentMethod: { type: String },
     feedback: { type: String },
     allocatedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    renderedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    renderedBy: { type: String },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
     serviceDate: { type: Date },

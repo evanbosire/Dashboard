@@ -456,14 +456,36 @@ router.get("/supervisor/services", async (req, res) => {
   }
 });
 // Supervisor assigns service to a Painter
+// router.put("/supervisor/allocate/:id", async (req, res) => {
+//   try {
+//     // Find a painter by role
+//     const painter = await Employee.findOne({ role: "Painter" });
+
+//     if (!painter) {
+//       return res.status(404).json({ message: "Painter not found" });
+//     }
+
+//     // Check if the service exists
+//     const service = await Service.findById(req.params.id);
+//     if (!service) {
+//       return res.status(404).json({ message: "Service not found" });
+//     }
+
+//     // Assign service to the painter
+//     service.renderedBy = painter._id;
+//     service.status = "Assigned";
+//     await service.save();
+
+//     res.json({ message: "Service assigned to painter successfully", service });
+//   } catch (error) {
+//     console.error("Error allocating service:", error);
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// });
+// Supervisor assigns service to a Painter
 router.put("/supervisor/allocate/:id", async (req, res) => {
   try {
-    // Find a painter by role
-    const painter = await Employee.findOne({ role: "Painter" });
-
-    if (!painter) {
-      return res.status(404).json({ message: "Painter not found" });
-    }
+    const { painter } = req.body; // Get the selected painter's name from the request body
 
     // Check if the service exists
     const service = await Service.findById(req.params.id);
@@ -471,9 +493,9 @@ router.put("/supervisor/allocate/:id", async (req, res) => {
       return res.status(404).json({ message: "Service not found" });
     }
 
-    // Assign service to the painter
-    service.renderedBy = painter._id;
-    service.status = "Assigned";
+    // Assign the selected painter's name and update the status
+    service.renderedBy = painter; // Save the painter's name
+    service.status = "Assigned"; // Update the status
     await service.save();
 
     res.json({ message: "Service assigned to painter successfully", service });
