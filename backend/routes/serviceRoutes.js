@@ -9,6 +9,7 @@ const ServicesPayment = require("../models/ServicesPayment"); // Updated to use 
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const path = require("path");
+const Message = require("../models/Messages");
 
 // // Create a service request
 // router.post("/service", async (req, res) => {
@@ -664,6 +665,88 @@ router.get("/user", async (req, res) => {
   } catch (error) {
     console.error("Error fetching customer:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+// GET all services with specific fields to display in admin web
+router.get("/services/offered-report", async (req, res) => {
+  try {
+    // Fetch all services and select only the required fields
+    const services = await Service.find(
+      {},
+      {
+        customerName: 1,
+        location: 1,
+        phone: 1,
+        description: 1,
+        ironSheetType: 1,
+        color: 1,
+        gauge: 1,
+        numberOfSheets: 1,
+        createdAt: 1,
+        feedback: 1,
+        renderedBy: 1,
+      }
+    ).populate("renderedBy", "name"); // Populate the renderedBy field with the painter's name (if it's a reference)
+
+    // Send the response
+    res.status(200).json({ services });
+  } catch (error) {
+    console.error("Error fetching services:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+//  To display to the admin web
+router.get("/services/payment-report", async (req, res) => {
+  try {
+    // Fetch all services and select only the required fields
+    const services = await Service.find(
+      {},
+      {
+        customerName: 1,
+        location: 1,
+        phone: 1,
+        description: 1,
+        ironSheetType: 1,
+        color: 1,
+        gauge: 1,
+        numberOfSheets: 1,
+        createdAt: 1,
+        feedback: 1,
+        renderedBy: 1,
+        paymentMethod: 1, // Include payment method
+        paymentCode: 1, // Include payment code
+        pricePerSheet: 1, // Include price per sheet
+        totalPrice: 1, // Include total price
+      }
+    ).populate("renderedBy", "name"); // Populate the renderedBy field with the painter's name (if it's a reference)
+
+    // Send the response
+    res.status(200).json({ services });
+  } catch (error) {
+    console.error("Error fetching services payment report:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+// GET all messages with specific fields to display in the admin web
+router.get("/messages-report", async (req, res) => {
+  try {
+    // Fetch all messages and select only the required fields
+    const messages = await Message.find(
+      {},
+      {
+        sender: 1,
+        receiver: 1,
+        message: 1,
+        customerName: 1,
+        timestamp: 1,
+      }
+    ).sort({ timestamp: -1 }); // Sort by timestamp in descending order (newest first)
+
+    // Send the response
+    res.status(200).json({ messages });
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 module.exports = router;

@@ -349,6 +349,7 @@ router.post("/checkout", async (req, res) => {
     const order = new Order({
       products: cartItems.map((item) => ({
         product: item.productId, // Reference to the CustomerProduct
+        productName: item.productName,
         quantity: item.quantity,
       })),
       totalPrice,
