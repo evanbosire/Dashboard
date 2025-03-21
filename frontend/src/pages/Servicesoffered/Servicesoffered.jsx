@@ -37,7 +37,7 @@ function Servicesoffered() {
   const fetchServicesOffered = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/services/offered-report"
+        "https://backend-n0lb.onrender.com/api/services/offered-report"
       );
       setServicesOffered(response.data.services);
     } catch (error) {
