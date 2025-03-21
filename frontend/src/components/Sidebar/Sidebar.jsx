@@ -153,13 +153,7 @@ function Sidebar({ isOpen, setIsSidebarOpen }) {
               >
                 <li>Supplies</li>
               </Link>
-              <Link
-                to={"/requested"}
-                className="custom-link"
-                onClick={handleLinkClick}
-              >
-                <li>Requested Materials</li>
-              </Link>
+              
               <Link
                 to={"/servicesoffered"}
                 className="custom-link"
