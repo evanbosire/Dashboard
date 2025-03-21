@@ -516,6 +516,7 @@ router.get("/dispatcher/released-orders", async (req, res) => {
 router.put("/dispatcher/dispatch-order/:orderId", async (req, res) => {
   try {
     const { orderId } = req.params;
+    const { driverName } = req.body;
 
     const order = await Order.findById(orderId);
     if (!order) {
@@ -528,6 +529,7 @@ router.put("/dispatcher/dispatch-order/:orderId", async (req, res) => {
 
     // Update order status to "Dispatched"
     order.status = "Dispatched";
+    order.driverName = driverName;
     await order.save();
 
     res.status(200).json({ message: "Order dispatched successfully", order });

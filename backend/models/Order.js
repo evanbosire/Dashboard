@@ -69,6 +69,9 @@ const OrderSchema = new mongoose.Schema({
     ],
     default: "Pending",
   },
+  driverName: {
+    type: String, 
+  },
   feedback: {
     type: String,
     default: "",

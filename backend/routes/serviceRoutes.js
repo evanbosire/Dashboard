@@ -10,6 +10,8 @@ const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const path = require("path");
 const Message = require("../models/Messages");
+const Order = require("../models/Order");
+const Requested = require("../models/RequestedRawMaterials");
 
 // // Create a service request
 // router.post("/service", async (req, res) => {
@@ -746,6 +748,141 @@ router.get("/messages-report", async (req, res) => {
     res.status(200).json({ messages });
   } catch (error) {
     console.error("Error fetching messages:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+// GET all orders with specific fields to display in the admin dash
+router.get("/orders/report", async (req, res) => {
+  try {
+    // Fetch all orders and select only the required fields
+    const orders = await Order.find(
+      {},
+      {
+        "shippingAddress.firstName": 1,
+        "shippingAddress.lastName": 1,
+        "shippingAddress.phoneNumber": 1,
+        "shippingAddress.email": 1,
+        "shippingAddress.county": 1,
+        "shippingAddress.description": 1,
+        status: 1,
+        feedback: 1,
+        createdAt: 1,
+        "products.productName": 1,
+        "products.quantity": 1,
+      }
+    ).sort({ createdAt: -1 }); // Sort by createdAt in descending order (newest first)
+
+    // Format the response to flatten the products array
+    const formattedOrders = orders.map((order) => {
+      return {
+        firstName: order.shippingAddress.firstName,
+        lastName: order.shippingAddress.lastName,
+        phoneNumber: order.shippingAddress.phoneNumber,
+        email: order.shippingAddress.email,
+        county: order.shippingAddress.county,
+        description: order.shippingAddress.description,
+        status: order.status,
+        feedback: order.feedback,
+        createdAt: order.createdAt,
+        products: order.products.map((product) => ({
+          productName: product.productName,
+          quantity: product.quantity,
+        })),
+      };
+    });
+
+    // Send the response
+    res.status(200).json({ orders: formattedOrders });
+  } catch (error) {
+    console.error("Error fetching orders report:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+// GET all orders with specific fields to display in the admin web
+router.get("/orders-payment/report", async (req, res) => {
+  try {
+    // Fetch all orders and select only the required fields
+    const orders = await Order.find(
+      {},
+      {
+        "shippingAddress.firstName": 1,
+        "shippingAddress.lastName": 1,
+        "shippingAddress.phoneNumber": 1,
+        "shippingAddress.email": 1,
+        "shippingAddress.county": 1,
+        "shippingAddress.description": 1,
+        status: 1,
+        feedback: 1,
+        createdAt: 1,
+        totalPrice: 1,
+        paymentMethod: 1,
+        paymentCode: 1,
+        "products.productName": 1,
+        "products.quantity": 1,
+      }
+    ).sort({ createdAt: -1 }); // Sort by createdAt in descending order (newest first)
+
+    // Format the response to flatten the products array
+    const formattedOrders = orders.map((order) => {
+      return {
+        firstName: order.shippingAddress.firstName,
+        lastName: order.shippingAddress.lastName,
+        phoneNumber: order.shippingAddress.phoneNumber,
+        email: order.shippingAddress.email,
+        county: order.shippingAddress.county,
+        description: order.shippingAddress.description,
+        status: order.status,
+        feedback: order.feedback,
+        createdAt: order.createdAt,
+        totalPrice: order.totalPrice,
+        paymentMethod: order.paymentMethod,
+        paymentCode: order.paymentCode,
+        products: order.products.map((product) => ({
+          productName: product.productName,
+          quantity: product.quantity,
+        })),
+      };
+    });
+
+    // Send the response
+    res.status(200).json({ orders: formattedOrders });
+  } catch (error) {
+    console.error("Error fetching orders report:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+// GET all supply details report to display in the admin web
+router.get("/supply-details/report", async (req, res) => {
+  try {
+    // Fetch all supply details and select the required fields
+    const supplyDetails = await Requested.find(
+      {},
+      {
+        material: 1,
+        requestedQuantity: 1,
+        unit: 1,
+        description: 1,
+        status: 1,
+        supplier: 1,
+        deliveryDate: 1,
+        dateRequested: 1,
+        supplyStatus: 1,
+        supplyInventoryStatus: 1,
+        suppliedDate: 1,
+        costPerUnit: 1,
+        cost: 1,
+        paymentStatus: 1,
+        requestedBy: 1,
+        allocatedQuantity: 1,
+        acceptanceDate: 1,
+        remarks: 1,
+      }
+    ).sort({ dateRequested: -1 }); // Sort by dateRequested in descending order (newest first)
+
+    // Send the response
+    res.status(200).json({ supplyDetails });
+  } catch (error) {
+    console.error("Error fetching supply details:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
