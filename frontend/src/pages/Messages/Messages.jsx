@@ -109,7 +109,7 @@ function MessagesReport() {
   const fetchMessages = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/messages-report"
+        "https://backend-n0lb.onrender.com/api/messages-report"
       );
       setMessages(response.data.messages);
     } catch (error) {
