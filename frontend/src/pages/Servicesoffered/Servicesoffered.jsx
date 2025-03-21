@@ -1,33 +1,27 @@
 // src/pages/Servicesoffered/Servicesoffered.jsx
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { fetchServicesOffered } from "../../redux/actions/servicesofferedActions";
+import axios from "axios";
 import Table from "../../components/Table/Table";
 import { ThreeDots } from "react-loader-spinner";
 import "./servicesoffered.scss";
 
 const columns = [
-  "_id",
-  "customerDetails",
-  "Location",
-  "ServiceName",
-  "BookingDate",
-  "ServicingDate",
-  "BookingFee",
-  "ServiceFee",
-  "PaymentDate",
-  "PaymentStatus",
-  "BookingStatus",
-  "AllocatedPainters",
+  "Customer Name", // customerName
+  "Location to Render Service", // location
+  "Location Description", // description
+  "Iron Sheet to Paint", // ironSheetType
+  "Color to Paint", // color
+  "Thickness of Iron Sheets", // gauge
+  "No. of Sheets to Paint", // numberOfSheets
+  "Booked Date", // createdAt
+  "Painter Name", // renderedBy
 ];
 
 function Servicesoffered() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { servicesOffered, loading } = useSelector(
-    (state) => state.servicesOffered
-  );
+  const [servicesOffered, setServicesOffered] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -35,43 +29,53 @@ function Servicesoffered() {
     if (!email) {
       navigate("/login");
     } else {
-      dispatch(fetchServicesOffered());
+      fetchServicesOffered();
     }
-  }, [dispatch, navigate]);
+  }, [navigate]);
 
+  // Fetch services offered from the API
+  const fetchServicesOffered = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/services/offered-report"
+      );
+      setServicesOffered(response.data.services);
+    } catch (error) {
+      console.error("Error fetching services offered:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle search input change
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
   };
 
-  const formatCustomerDetails = (details) => {
-    if (details) {
-      return `Customer Name: ${details.driverName}, Email: ${details.Email}, Phone: ${details.Phone}`;
-    }
-    return "";
-  };
+  
 
-  const formatAllocatedPainters = (painters) => {
-    if (painters) {
-      // Join painters' names with a space or <br> for separate lines
-      return painters.join("  | ");
-    }
-    return "";
-  };
-
-  // Pre-process data to handle nested objects
+  // Pre-process data to match the column names and format fields
   const processedData = servicesOffered.map((item) => ({
-    ...item,
-    customerDetails: formatCustomerDetails(item.customerDetails),
-    // Format allocated painters for HTML
-    AllocatedPainters: formatAllocatedPainters(item.AllocatedPainters),
+    "Customer Name": item.customerName || "N/A", // Customer Name
+    "Location to Render Service": item.location || "N/A", // Location to Render Service
+    "Location Description": item.description || "N/A", // Location Description
+    "Iron Sheet to Paint": item.ironSheetType || "N/A", // Iron Sheet to Paint
+    "Color to Paint": item.color || "N/A", // Color to Paint
+    "Thickness of Iron Sheets": item.gauge || "N/A", // Thickness of Iron Sheets
+    "No. of Sheets to Paint": item.numberOfSheets || "N/A", // No. of Sheets to Paint
+    "Booked Date": new Date(item.createdAt).toLocaleDateString(), // Booked Date (formatted)
+    "Painter Name": item.renderedBy // Painter Name
   }));
 
   // Filter data based on search query
-  const filteredData = processedData.filter((item) =>
-    Object.values(item).some((value) =>
-      value.toString().toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  );
+ const filteredData = processedData.filter((item) =>
+   Object.values(item).some(
+     (value) =>
+       value &&
+       value.toString().toLowerCase().includes(searchQuery.toLowerCase())
+   )
+ );
+
 
   return (
     <div className="servicesofferedContainer">
@@ -103,5 +107,4 @@ function Servicesoffered() {
     </div>
   );
 }
-
 export default Servicesoffered;
