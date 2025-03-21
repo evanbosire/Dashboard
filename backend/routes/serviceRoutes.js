@@ -886,4 +886,49 @@ router.get("/supply-details/report", async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+// GET shipment reports to display in the admin web
+router.get("/shipment-reports", async (req, res) => {
+  try {
+    // Fetch all orders and select the required fields
+    const orders = await Order.find(
+      {},
+      {
+        _id: 1, // Order ID
+        "products.product": 1, // Product ID
+        "products.productName": 1, // Product Name
+        "products.quantity": 1, // Quantity
+        "shippingAddress.firstName": 1, // First Name
+        "shippingAddress.lastName": 1, // Last Name
+        "shippingAddress.phoneNumber": 1, // Phone Number
+        "shippingAddress.email": 1, // Email
+        driverName: 1, // Driver Name
+        status: 1, // Status
+      }
+    ).sort({ createdAt: -1 }); // Sort by createdAt in descending order (newest first)
+
+    // Format the response to flatten the products array
+    const shipmentReports = orders.map((order) => {
+      return {
+        orderId: order._id,
+        products: order.products.map((product) => ({
+          productId: product.product,
+          productName: product.productName,
+          quantity: product.quantity,
+        })),
+        firstName: order.shippingAddress.firstName,
+        lastName: order.shippingAddress.lastName,
+        phoneNumber: order.shippingAddress.phoneNumber,
+        email: order.shippingAddress.email,
+        driverName: order.driverName || "Not Assigned", // Default to "Not Assigned" if driverName is missing
+        status: order.status,
+      };
+    });
+
+    // Send the response
+    res.status(200).json({ shipmentReports });
+  } catch (error) {
+    console.error("Error fetching shipment reports:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
 module.exports = router;
