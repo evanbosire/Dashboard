@@ -2,8 +2,8 @@ const mongoose = require("mongoose");
 
 const ToolSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true }, // Name of the tool
-    quantity: { type: Number, required: true }, // Quantity available
+    name: { type: String, required: true }, 
+    quantity: { type: Number, required: true },
     unit: {
       type: String,
       required: true,
@@ -22,11 +22,11 @@ const ToolSchema = new mongoose.Schema(
       type: String,
       enum: ["Available", "Released", "Returned"],
       default: "Available",
-    }, // Status of the tool
-    releasedAt: { type: Date }, // When the tool was released
-    returnedAt: { type: Date }, // When the tool was returned
+    }, 
+    releasedAt: { type: Date }, 
+    returnedAt: { type: Date }, 
   },
-  { timestamps: true } // Enables createdAt and updatedAt fields
+  { timestamps: true } 
 );
 
 module.exports = mongoose.model("Tool", ToolSchema);

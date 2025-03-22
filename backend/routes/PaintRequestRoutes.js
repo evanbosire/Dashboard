@@ -419,8 +419,17 @@ router.post("/add-tool", async (req, res) => {
       return res.status(400).json({ message: "Invalid input data" });
     }
 
-    // Check if the unit provided is valid
-    const validUnits = ["pieces", "sheets", "units", "liters", "tubes", "pairs", "sets", "rolls"];
+    // Valid unit check
+    const validUnits = [
+      "pieces",
+      "sheets",
+      "units",
+      "liters",
+      "tubes",
+      "pairs",
+      "sets",
+      "rolls",
+    ];
     if (!validUnits.includes(unit)) {
       return res.status(400).json({ message: "Invalid unit type" });
     }
@@ -429,29 +438,34 @@ router.post("/add-tool", async (req, res) => {
     let tool = await Tool.findOne({ name });
 
     if (tool) {
-      // Ensure the unit is the same as the existing tool's unit
+      // Ensure the unit matches before updating quantity
       if (tool.unit !== unit) {
-        return res.status(400).json({ message: `Unit mismatch! Existing tool '${name}' uses '${tool.unit}'.` });
+        return res
+          .status(400)
+          .json({
+            message: `Unit mismatch! Existing tool '${name}' uses '${tool.unit}'.`,
+          });
       }
 
       // Update quantity if tool exists
       tool.quantity += quantity;
+      tool.status = "Available";
       await tool.save();
 
       return res.status(200).json({
         message: "Tool quantity updated successfully",
         data: tool,
       });
-    } else {
-      // Create a new tool if it doesn't exist
-      tool = new Tool({ name, quantity, unit });
-      await tool.save();
-
-      return res.status(201).json({
-        message: "Tool added successfully",
-        data: tool,
-      });
     }
+
+    // If tool does not exist, create a new tool
+    tool = new Tool({ name, quantity, unit, status: "Available" });
+    await tool.save();
+
+    return res.status(201).json({
+      message: "Tool added successfully",
+      data: tool,
+    });
   } catch (err) {
     res.status(500).json({
       message: "Failed to add or update tool",
@@ -476,43 +490,197 @@ router.get("/tools", async (req, res) => {
     });
   }
 });
-router.post("/request-tools", async (req, res) => {
+// Inventory Manager Releases Tools
+router.post("/release-tool", async (req, res) => {
   try {
-    const { name, quantity } = req.body;
+    const { name, quantity, unit } = req.body;
 
     // Validate input
-    if (!name || !quantity || quantity <= 0) {
+    if (!name || !quantity || quantity <= 0 || !unit) {
       return res.status(400).json({ message: "Invalid input data" });
     }
 
-    // Find the tool by name
+    // Find the tool
     const tool = await Tool.findOne({ name });
     if (!tool) {
       return res.status(404).json({ message: "Tool not found" });
     }
 
-    // Check if the tool is available in sufficient quantity
-    if (tool.quantity < quantity) {
-      return res
-        .status(400)
-        .json({
-          message: `Insufficient tool quantity. Available: ${tool.quantity} ${tool.unit}`,
-        });
+    // Validate the unit
+    if (tool.unit !== unit) {
+      return res.status(400).json({
+        message: `Invalid unit. Expected: ${tool.unit}, but got: ${unit}`,
+      });
     }
 
-    // Reduce tool quantity
+    // Check if there is enough quantity to release
+    if (tool.quantity < quantity) {
+      return res.status(400).json({
+        message: `Insufficient quantity. Available: ${tool.quantity} ${tool.unit}`,
+      });
+    }
+
+    // Reduce tool quantity and mark as "Released"
     tool.quantity -= quantity;
     tool.status = "Released";
     tool.releasedAt = new Date();
     await tool.save();
 
     res.status(200).json({
+      message: `Tool '${name}' released successfully. ${tool.quantity} ${tool.unit} remaining.`,
+      data: {
+        name: tool.name,
+        quantity: tool.quantity,
+        unit: tool.unit,
+        status: tool.status,
+        releasedAt: tool.releasedAt,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to release tool",
+      error: err.message,
+    });
+  }
+});
+// Inventory Manager Views Requested Tools
+router.get("/view-requested-tools", async (req, res) => {
+  try {
+    // Fetch all tool requests
+    const requestedTools = await Tool.find({ quantity: { $lt: 100 } }) // Assuming 100 is the restock threshold
+      .select("name quantity unit status releasedAt")
+      .sort({ releasedAt: -1 });
+
+    if (!requestedTools.length) {
+      return res.status(404).json({ message: "No tool requests found" });
+    }
+
+    res.status(200).json({
+      message: "Requested tools retrieved successfully",
+      data: requestedTools,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to fetch requested tools",
+      error: err.message,
+    });
+  }
+});
+
+// Painter Requests Tools
+router.post("/request-tools", async (req, res) => {
+  try {
+    const { name, quantity, unit } = req.body;
+
+    // Validate input
+    if (!name || !quantity || quantity <= 0 || !unit) {
+      return res.status(400).json({ message: "Invalid input data" });
+    }
+
+    // Find the tool
+    const tool = await Tool.findOne({ name });
+
+    if (!tool) {
+      return res.status(404).json({ message: "Tool not found" });
+    }
+
+    // Check if the unit matches the existing tool's unit
+    if (tool.unit !== unit) {
+      return res.status(400).json({
+        message: `Unit mismatch! Existing tool '${name}' uses '${tool.unit}', but '${unit}' was requested.`,
+      });
+    }
+
+    // Check if the tool is available in sufficient quantity
+    if (tool.quantity < quantity) {
+      return res.status(400).json({
+        message: `Insufficient tool quantity. Available: ${tool.quantity} ${tool.unit}`,
+      });
+    }
+
+    // Reduce tool quantity
+    tool.quantity -= quantity;
+    tool.status = tool.quantity > 0 ? "Available" : "Out of Stock"; // Mark as 'Out of Stock' if depleted
+    tool.releasedAt = new Date();
+    await tool.save();
+
+    res.status(200).json({
       message: `Tool '${name}' requested successfully. ${tool.quantity} ${tool.unit} remaining.`,
-      data: tool,
+      data: {
+        name: tool.name,
+        quantity: tool.quantity,
+        unit: tool.unit,
+        status: tool.status,
+        releasedAt: tool.releasedAt,
+      },
     });
   } catch (err) {
     res.status(500).json({
       message: "Failed to request tool",
+      error: err.message,
+    });
+  }
+});
+
+// Painter Retrieves Released Tools
+router.get("/released-tools", async (req, res) => {
+  try {
+    const releasedTools = await Tool.find({ status: "Released" });
+
+    res.status(200).json({
+      message: "Released tools fetched successfully",
+      data: releasedTools,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to fetch released tools",
+      error: err.message,
+    });
+  }
+});
+
+// Painter Returns Tools
+router.post("/return-tools", async (req, res) => {
+  try {
+    const { name, quantity, unit } = req.body;
+
+    // Validate input
+    if (!name || !quantity || quantity <= 0 || !unit) {
+      return res.status(400).json({ message: "Invalid input data" });
+    }
+
+    // Find the tool
+    const tool = await Tool.findOne({ name });
+    if (!tool) {
+      return res.status(404).json({ message: "Tool not found" });
+    }
+
+    // Validate the unit
+    if (tool.unit !== unit) {
+      return res.status(400).json({
+        message: `Invalid unit. Expected: ${tool.unit}, but got: ${unit}`,
+      });
+    }
+
+    // Update quantity and status
+    tool.quantity += quantity;
+    tool.status = "Returned";
+    tool.returnedAt = new Date();
+    await tool.save();
+
+    res.status(200).json({
+      message: `Tool '${name}' returned successfully. ${tool.quantity} ${tool.unit} now available.`,
+      data: {
+        name: tool.name,
+        quantity: tool.quantity,
+        unit: tool.unit,
+        status: tool.status,
+        returnedAt: tool.returnedAt,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to return tool",
       error: err.message,
     });
   }
