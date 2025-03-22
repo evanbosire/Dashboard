@@ -409,281 +409,175 @@ router.get("/allocated-paints", async (req, res) => {
   }
 });
 
-// Inventory Manager adds or updates a tool.
-router.post("/add-tool", async (req, res) => {
+// API to add tools to inventory (Inventory Manager)
+router.post("/tools", async (req, res) => {
+  const { name, quantity, unit } = req.body;
+
   try {
-    const { name, quantity, unit } = req.body;
-
-    // Validate input
-    if (!name || !quantity || quantity <= 0 || !unit) {
-      return res.status(400).json({ message: "Invalid input data" });
-    }
-
-    // Valid unit check
-    const validUnits = [
-      "pieces",
-      "sheets",
-      "units",
-      "liters",
-      "tubes",
-      "pairs",
-      "sets",
-      "rolls",
-    ];
-    if (!validUnits.includes(unit)) {
-      return res.status(400).json({ message: "Invalid unit type" });
-    }
-
     // Check if the tool already exists
     let tool = await Tool.findOne({ name });
 
     if (tool) {
-      // Ensure the unit matches before updating quantity
-      if (tool.unit !== unit) {
-        return res
-          .status(400)
-          .json({
-            message: `Unit mismatch! Existing tool '${name}' uses '${tool.unit}'.`,
-          });
-      }
-
-      // Update quantity if tool exists
+      // If tool exists, increase the quantity
       tool.quantity += quantity;
-      tool.status = "Available";
       await tool.save();
-
-      return res.status(200).json({
-        message: "Tool quantity updated successfully",
-        data: tool,
-      });
+      return res.status(200).send({ message: "Tool quantity updated", tool });
+    } else {
+      // Create a new tool
+      tool = new Tool({ name, quantity, unit });
+      await tool.save();
+      return res.status(201).send({ message: "New tool added", tool });
     }
-
-    // If tool does not exist, create a new tool
-    tool = new Tool({ name, quantity, unit, status: "Available" });
-    await tool.save();
-
-    return res.status(201).json({
-      message: "Tool added successfully",
-      data: tool,
-    });
-  } catch (err) {
-    res.status(500).json({
-      message: "Failed to add or update tool",
-      error: err.message,
-    });
+  } catch (error) {
+    res
+      .status(400)
+      .send({
+        message: "Invalid unit or missing fields",
+        error: error.message,
+      });
   }
 });
 
-// Inventory Manager views available tools
+// API to get all tools (Both Inventory Manager and Painter)
 router.get("/tools", async (req, res) => {
-  try {
-    const tools = await Tool.find();
-
-    res.status(200).json({
-      message: "Tools fetched successfully",
-      data: tools,
-    });
-  } catch (err) {
-    res.status(500).json({
-      message: "Failed to fetch tools",
-      error: err.message,
-    });
-  }
+  const tools = await Tool.find({});
+  res.send(tools);
 });
-// Inventory Manager Releases Tools
-router.post("/release-tool", async (req, res) => {
+
+// API for the painter to request a tool
+router.post("/tools/request/:id", async (req, res) => {
+  const { requestedQuantity } = req.body;
+  const tool = await Tool.findById(req.params.id);
+
+  if (!tool) {
+    return res.status(404).send({ message: "Tool not found" });
+  }
+
+  if (tool.quantity < requestedQuantity) {
+    return res.status(400).send({ message: "Insufficient quantity in stock" });
+  }
+
+  // Store the requested quantity without subtracting it yet
+  tool.requestedQuantity = requestedQuantity;
+  tool.status = "Pending Release"; // Update status to "Pending Release"
+  tool.releasedAt = new Date(); // Set the releasedAt timestamp
+  await tool.save();
+
+  res.send({
+    _id: tool._id,
+    name: tool.name,
+    quantity: tool.quantity, // Stock remains unchanged until release
+    unit: tool.unit,
+    status: tool.status,
+    requestedQuantity: tool.requestedQuantity,
+    releasedAt: tool.releasedAt,
+    __v: tool.__v,
+  });
+});
+// API for the inventory manager to confirm the release of the tool
+router.patch("/tools/release/:id", async (req, res) => {
   try {
-    const { name, quantity, unit } = req.body;
+    const tool = await Tool.findById(req.params.id);
 
-    // Validate input
-    if (!name || !quantity || quantity <= 0 || !unit) {
-      return res.status(400).json({ message: "Invalid input data" });
-    }
-
-    // Find the tool
-    const tool = await Tool.findOne({ name });
+    // Check if the tool exists
     if (!tool) {
-      return res.status(404).json({ message: "Tool not found" });
+      return res.status(404).send({ message: "Tool not found" });
     }
 
-    // Validate the unit
-    if (tool.unit !== unit) {
-      return res.status(400).json({
-        message: `Invalid unit. Expected: ${tool.unit}, but got: ${unit}`,
-      });
+    // Check if the tool is in "Pending Release" state
+    if (tool.status !== "Pending Release") {
+      return res
+        .status(400)
+        .send({ message: "Tool is not in pending release state" });
     }
 
-    // Check if there is enough quantity to release
-    if (tool.quantity < quantity) {
-      return res.status(400).json({
-        message: `Insufficient quantity. Available: ${tool.quantity} ${tool.unit}`,
-      });
+    // Validate requestedQuantity
+    if (
+      typeof tool.requestedQuantity !== "number" ||
+      tool.requestedQuantity <= 0
+    ) {
+      return res.status(400).send({ message: "Invalid requested quantity" });
     }
 
-    // Reduce tool quantity and mark as "Released"
-    tool.quantity -= quantity;
+    // Subtract the requested quantity from the inventory
+    tool.quantity -= tool.requestedQuantity;
+
+    // Update status to "Released"
     tool.status = "Released";
-    tool.releasedAt = new Date();
+
+    // Save the updated tool
     await tool.save();
 
-    res.status(200).json({
-      message: `Tool '${name}' released successfully. ${tool.quantity} ${tool.unit} remaining.`,
-      data: {
-        name: tool.name,
-        quantity: tool.quantity,
-        unit: tool.unit,
-        status: tool.status,
-        releasedAt: tool.releasedAt,
-      },
+    // Send the updated tool as the response
+    res.send({
+      _id: tool._id,
+      name: tool.name,
+      quantity: tool.quantity,
+      unit: tool.unit,
+      status: tool.status,
+      requestedQuantity: tool.requestedQuantity,
+      __v: tool.__v,
     });
-  } catch (err) {
-    res.status(500).json({
-      message: "Failed to release tool",
-      error: err.message,
-    });
+  } catch (error) {
+    console.error("Error in /tools/release/:id:", error);
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
   }
 });
-// Inventory Manager Views Requested Tools
-router.get("/view-requested-tools", async (req, res) => {
-  try {
-    // Fetch all tool requests
-    const requestedTools = await Tool.find({ quantity: { $lt: 100 } }) // Assuming 100 is the restock threshold
-      .select("name quantity unit status releasedAt")
-      .sort({ releasedAt: -1 });
+// API for the painter to return a tool
+router.post("/tools/return/:id", async (req, res) => {
+  const { returnedQuantity } = req.body;
+  const tool = await Tool.findById(req.params.id);
 
-    if (!requestedTools.length) {
-      return res.status(404).json({ message: "No tool requests found" });
-    }
-
-    res.status(200).json({
-      message: "Requested tools retrieved successfully",
-      data: requestedTools,
-    });
-  } catch (err) {
-    res.status(500).json({
-      message: "Failed to fetch requested tools",
-      error: err.message,
-    });
+  if (!tool) {
+    return res.status(404).send({ message: "Tool not found" });
   }
+
+  // Check if the tool is in "Released" state
+  if (tool.status !== "Released") {
+    return res.status(400).send({ message: "Tool is not in released state" });
+  }
+
+  // Check if the returned quantity matches the requested quantity
+  if (returnedQuantity !== tool.requestedQuantity) {
+    return res
+      .status(400)
+      .send({ message: "Returned quantity does not match requested quantity" });
+  }
+
+  // Increase inventory quantity
+  tool.quantity += returnedQuantity;
+
+  // Update status to "Returned"
+  tool.status = "Returned";
+  tool.returnedAt = new Date(); // Set the returnedAt timestamp
+  await tool.save();
+
+  res.send(tool);
 });
 
-// Painter Requests Tools
-router.post("/request-tools", async (req, res) => {
-  try {
-    const { name, quantity, unit } = req.body;
+// API for the inventory manager to mark the tool as returned
+router.patch("/tools/mark-available/:id", async (req, res) => {
+  const tool = await Tool.findById(req.params.id);
 
-    // Validate input
-    if (!name || !quantity || quantity <= 0 || !unit) {
-      return res.status(400).json({ message: "Invalid input data" });
-    }
-
-    // Find the tool
-    const tool = await Tool.findOne({ name });
-
-    if (!tool) {
-      return res.status(404).json({ message: "Tool not found" });
-    }
-
-    // Check if the unit matches the existing tool's unit
-    if (tool.unit !== unit) {
-      return res.status(400).json({
-        message: `Unit mismatch! Existing tool '${name}' uses '${tool.unit}', but '${unit}' was requested.`,
-      });
-    }
-
-    // Check if the tool is available in sufficient quantity
-    if (tool.quantity < quantity) {
-      return res.status(400).json({
-        message: `Insufficient tool quantity. Available: ${tool.quantity} ${tool.unit}`,
-      });
-    }
-
-    // Reduce tool quantity
-    tool.quantity -= quantity;
-    tool.status = tool.quantity > 0 ? "Available" : "Out of Stock"; // Mark as 'Out of Stock' if depleted
-    tool.releasedAt = new Date();
-    await tool.save();
-
-    res.status(200).json({
-      message: `Tool '${name}' requested successfully. ${tool.quantity} ${tool.unit} remaining.`,
-      data: {
-        name: tool.name,
-        quantity: tool.quantity,
-        unit: tool.unit,
-        status: tool.status,
-        releasedAt: tool.releasedAt,
-      },
-    });
-  } catch (err) {
-    res.status(500).json({
-      message: "Failed to request tool",
-      error: err.message,
-    });
+  if (!tool) {
+    return res.status(404).send({ message: "Tool not found" });
   }
-});
 
-// Painter Retrieves Released Tools
-router.get("/released-tools", async (req, res) => {
-  try {
-    const releasedTools = await Tool.find({ status: "Released" });
-
-    res.status(200).json({
-      message: "Released tools fetched successfully",
-      data: releasedTools,
-    });
-  } catch (err) {
-    res.status(500).json({
-      message: "Failed to fetch released tools",
-      error: err.message,
-    });
+  // Check if the tool is in "Returned" state
+  if (tool.status !== "Returned") {
+    return res.status(400).send({ message: "Tool is not in returned state" });
   }
+
+  // Reset requestedQuantity and returnedQuantity
+  tool.requestedQuantity = 0;
+  tool.returnedQuantity = 0;
+
+  // Update status to "Available"
+  tool.status = "Available";
+  await tool.save();
+
+  res.send(tool);
 });
-
-// Painter Returns Tools
-router.post("/return-tools", async (req, res) => {
-  try {
-    const { name, quantity, unit } = req.body;
-
-    // Validate input
-    if (!name || !quantity || quantity <= 0 || !unit) {
-      return res.status(400).json({ message: "Invalid input data" });
-    }
-
-    // Find the tool
-    const tool = await Tool.findOne({ name });
-    if (!tool) {
-      return res.status(404).json({ message: "Tool not found" });
-    }
-
-    // Validate the unit
-    if (tool.unit !== unit) {
-      return res.status(400).json({
-        message: `Invalid unit. Expected: ${tool.unit}, but got: ${unit}`,
-      });
-    }
-
-    // Update quantity and status
-    tool.quantity += quantity;
-    tool.status = "Returned";
-    tool.returnedAt = new Date();
-    await tool.save();
-
-    res.status(200).json({
-      message: `Tool '${name}' returned successfully. ${tool.quantity} ${tool.unit} now available.`,
-      data: {
-        name: tool.name,
-        quantity: tool.quantity,
-        unit: tool.unit,
-        status: tool.status,
-        returnedAt: tool.returnedAt,
-      },
-    });
-  } catch (err) {
-    res.status(500).json({
-      message: "Failed to return tool",
-      error: err.message,
-    });
-  }
-});
-
 module.exports = router;
