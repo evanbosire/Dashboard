@@ -364,20 +364,32 @@ router.put("/supervisor/allocate/:id", async (req, res) => {
   }
 });
 
+// // Painter views assigned services
+// router.get("/painter/services", async (req, res) => {
+//   try {
+//     // Find the painter by role
+//     const painter = await Employee.findOne({ role: "Painter" });
+
+//     if (!painter) {
+//       return res.status(404).json({ message: "Painter not found" });
+//     }
+
+//     // Get all services assigned to the painter
+//     const services = await Service.find({ renderedBy: painter._id }).populate(
+//       "userId"
+//     );
+
+//     res.json({ message: "Assigned services retrieved successfully", services });
+//   } catch (error) {
+//     console.error("Error fetching assigned services:", error);
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// });
 // Painter views assigned services
 router.get("/painter/services", async (req, res) => {
   try {
-    // Find the painter by role
-    const painter = await Employee.findOne({ role: "Painter" });
-
-    if (!painter) {
-      return res.status(404).json({ message: "Painter not found" });
-    }
-
-    // Get all services assigned to the painter
-    const services = await Service.find({ renderedBy: painter._id }).populate(
-      "userId"
-    );
+    // Find all services with the status "Assigned"
+    const services = await Service.find({ status: "Assigned" }).populate("userId");
 
     res.json({ message: "Assigned services retrieved successfully", services });
   } catch (error) {
@@ -385,6 +397,7 @@ router.get("/painter/services", async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+
 
 // Painter marks service as rendered
 router.put("/painter/complete/:id", async (req, res) => {
